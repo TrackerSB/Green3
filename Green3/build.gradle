@@ -1,6 +1,9 @@
 plugins {
+    id 'io.freefair.lombok' version '6.1.0-m3'
     // NOTE version 0.0.9 yields an execution error
     id 'org.openjfx.javafxplugin' version '0.0.8'
+
+    id 'application'
     id 'java'
     id 'distribution'
 }
@@ -21,6 +24,11 @@ repositories {
 dependencies {
 }
 
+application {
+    mainModule = 'bayern.steinbrecher.Green3'
+    mainClass = 'bayern.steinbrecher.green3.Main'
+}
+
 java {
     modularity.inferModulePath = true
 }
@@ -28,6 +36,7 @@ java {
 javafx {
     version = "$sourceCompatibility"
     modules = [
+            "javafx.graphics"
     ]
 }
 
