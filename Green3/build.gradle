@@ -1,0 +1,41 @@
+plugins {
+    // NOTE version 0.0.9 yields an execution error
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'java'
+    id 'distribution'
+}
+
+group 'bayern.steinbrecher.Green3'
+version '3u00-rc01-SNAPSHOT'
+
+sourceCompatibility = 16
+targetCompatibility = "$sourceCompatibility" as Integer
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
+}
+
+dependencies {
+}
+
+java {
+    modularity.inferModulePath = true
+}
+
+javafx {
+    version = "$sourceCompatibility"
+    modules = [
+    ]
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+    options.release = "$sourceCompatibility" as Integer
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
