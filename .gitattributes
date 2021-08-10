@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+#Files which ALWAYS have to have CRLF
+*.vbs text eol=crlf
