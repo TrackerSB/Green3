@@ -22,6 +22,7 @@ repositories {
 }
 
 dependencies {
+    implementation 'bayern.steinbrecher:ScreenSwitcher:0.2.3-rc.1-SNAPSHOT'
 }
 
 application {
