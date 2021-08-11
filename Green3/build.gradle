@@ -37,6 +37,8 @@ java {
 javafx {
     version = "$sourceCompatibility"
     modules = [
+            "javafx.controls",
+            "javafx.fxml",
             "javafx.graphics"
     ]
 }
