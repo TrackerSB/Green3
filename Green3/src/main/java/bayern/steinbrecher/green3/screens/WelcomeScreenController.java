@@ -20,7 +20,7 @@ public class WelcomeScreenController extends ScreenController {
     @FXML
     private ResourceBundle resources;
 
-    private ImageButton generateMenuEntry(@NonNull WelcomeScreenFeature feature) {
+    private @NonNull ImageButton generateMenuEntry(@NonNull WelcomeScreenFeature feature) {
         ImageButton menuEntry = new ImageButton();
         menuEntry.setText(resources.getString(feature.getDescriptionResourceKey()));
         menuEntry.setImageUrl(feature.getImageURL().toExternalForm());
