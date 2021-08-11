@@ -1,6 +1,7 @@
 package bayern.steinbrecher.green3.features;
 
 import bayern.steinbrecher.green3.screens.WelcomeScreen;
+import javafx.application.Platform;
 import lombok.NonNull;
 
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ public final class FeatureRegistry {
 
     static {
         add(new WelcomeScreenFeature("Exit", true,
-                WelcomeScreen.class.getResource("exit.png"), "exit"));
+                WelcomeScreen.class.getResource("exit.png"), "exit", Platform::exit));
     }
 
     private FeatureRegistry() {
