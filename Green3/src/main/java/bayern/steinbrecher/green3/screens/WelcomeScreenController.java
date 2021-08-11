@@ -24,7 +24,7 @@ public class WelcomeScreenController extends ScreenController {
         ImageButton menuEntry = new ImageButton();
         menuEntry.setText(resources.getString(feature.getDescriptionResourceKey()));
         menuEntry.setImageUrl(feature.getImageURL().toExternalForm());
-        menuEntry.setOnAction(mevt -> feature.getAction().run());
+        menuEntry.setOnAction(mevt -> feature.getAction().accept(getScreenManager()));
         return menuEntry;
     }
 

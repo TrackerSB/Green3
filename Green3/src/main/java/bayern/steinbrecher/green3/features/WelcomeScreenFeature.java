@@ -1,8 +1,10 @@
 package bayern.steinbrecher.green3.features;
 
+import bayern.steinbrecher.screenswitcher.ScreenManager;
 import lombok.NonNull;
 
 import java.net.URL;
+import java.util.function.Consumer;
 
 /**
  * @author Stefan Huber
@@ -11,10 +13,10 @@ import java.net.URL;
 public class WelcomeScreenFeature extends Feature {
     private final URL imageURL;
     private final String descriptionResourceKey;
-    private final Runnable action;
+    private final Consumer<ScreenManager> action;
 
     protected WelcomeScreenFeature(@NonNull String id, boolean enabled, @NonNull URL imageURL,
-                                   @NonNull String descriptionResourceKey, @NonNull Runnable action) {
+                                   @NonNull String descriptionResourceKey, @NonNull Consumer<ScreenManager> action) {
         super(id, enabled);
         this.imageURL = imageURL;
         this.descriptionResourceKey = descriptionResourceKey;
@@ -29,7 +31,7 @@ public class WelcomeScreenFeature extends Feature {
         return descriptionResourceKey;
     }
 
-    public Runnable getAction() {
+    public Consumer<ScreenManager> getAction() {
         return action;
     }
 }

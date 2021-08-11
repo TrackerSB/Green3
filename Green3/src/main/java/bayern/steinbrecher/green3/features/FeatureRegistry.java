@@ -1,22 +1,35 @@
 package bayern.steinbrecher.green3.features;
 
+import bayern.steinbrecher.green3.screens.AboutScreen;
 import bayern.steinbrecher.green3.screens.WelcomeScreen;
+import bayern.steinbrecher.screenswitcher.ScreenSwitchFailedException;
 import javafx.application.Platform;
 import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Stefan Huber
  * @since 3u00
  */
 public final class FeatureRegistry {
+    private static final Logger LOGGER = Logger.getLogger(FeatureRegistry.class.getName());
     private static final Collection<Feature> registeredFeatures = new ArrayList<>();
 
     static {
+        add(new WelcomeScreenFeature("Credits", true,
+                WelcomeScreen.class.getResource("about.png"), "about", sm -> {
+            try {
+                sm.switchTo(new AboutScreen());
+            } catch (ScreenSwitchFailedException ex) {
+                LOGGER.log(Level.SEVERE, "Could not open about screen", ex);
+            }
+        }));
         add(new WelcomeScreenFeature("Exit", true,
-                WelcomeScreen.class.getResource("exit.png"), "exit", Platform::exit));
+                WelcomeScreen.class.getResource("exit.png"), "exit", sm -> Platform.exit()));
     }
 
     private FeatureRegistry() {
