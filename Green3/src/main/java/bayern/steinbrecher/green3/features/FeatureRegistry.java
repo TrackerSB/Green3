@@ -1,7 +1,7 @@
 package bayern.steinbrecher.green3.features;
 
-import bayern.steinbrecher.green3.screens.AboutScreen;
-import bayern.steinbrecher.green3.screens.WelcomeScreen;
+import bayern.steinbrecher.green3.screens.about.AboutScreen;
+import bayern.steinbrecher.green3.screens.welcome.WelcomeScreen;
 import bayern.steinbrecher.screenswitcher.ScreenSwitchFailedException;
 import javafx.application.Platform;
 import lombok.NonNull;
@@ -21,7 +21,7 @@ public final class FeatureRegistry {
 
     static {
         add(new WelcomeScreenFeature("Credits", true,
-                WelcomeScreen.class.getResource("about.png"), "about", sm -> {
+                WelcomeScreen.class.getResource("teamwork.png"), "about", sm -> {
             try {
                 sm.switchTo(new AboutScreen());
             } catch (ScreenSwitchFailedException ex) {
@@ -29,7 +29,7 @@ public final class FeatureRegistry {
             }
         }));
         add(new WelcomeScreenFeature("Exit", true,
-                WelcomeScreen.class.getResource("exit.png"), "exit", sm -> Platform.exit()));
+                WelcomeScreen.class.getResource("power.png"), "exit", sm -> Platform.exit()));
     }
 
     private FeatureRegistry() {

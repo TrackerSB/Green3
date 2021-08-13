@@ -1,4 +1,4 @@
-package bayern.steinbrecher.green3.screens;
+package bayern.steinbrecher.green3.screens.about;
 
 import bayern.steinbrecher.green3.BuildConfig;
 import bayern.steinbrecher.screenswitcher.ScreenController;

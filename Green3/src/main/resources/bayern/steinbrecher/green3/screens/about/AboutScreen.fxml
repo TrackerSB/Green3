@@ -14,13 +14,13 @@ since: 3u00
 <?import javafx.scene.text.Text?>
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
-           fx:controller="bayern.steinbrecher.green3.screens.AboutScreenController"
+           fx:controller="bayern.steinbrecher.green3.screens.about.AboutScreenController"
            stylesheets="@AboutScreen.css"
            alignment="TOP_CENTER">
     <VBox id="contentRoot">
         <HBox id="title">
             <ImageView>
-                <Image url="@../logo.png"
+                <Image url="@../../logo.png"
                        preserveRatio="true"
                        requestedWidth="200"/>
             </ImageView>

@@ -1,6 +1,6 @@
 package bayern.steinbrecher.green3;
 
-import bayern.steinbrecher.green3.screens.WelcomeScreen;
+import bayern.steinbrecher.green3.screens.welcome.WelcomeScreen;
 import bayern.steinbrecher.screenswitcher.ScreenManager;
 import bayern.steinbrecher.screenswitcher.ScreenSwitchFailedException;
 import javafx.application.Application;

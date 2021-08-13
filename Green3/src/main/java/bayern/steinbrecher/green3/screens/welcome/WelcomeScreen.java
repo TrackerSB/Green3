@@ -1,4 +1,4 @@
-package bayern.steinbrecher.green3.screens;
+package bayern.steinbrecher.green3.screens.welcome;
 
 import bayern.steinbrecher.screenswitcher.Screen;
 
@@ -12,6 +12,6 @@ public class WelcomeScreen extends Screen<WelcomeScreenController> {
     public WelcomeScreen() {
         super(
                 WelcomeScreen.class.getResource("WelcomeScreen.fxml"),
-                ResourceBundle.getBundle("bayern.steinbrecher.green3.screens.WelcomeScreen"));
+                ResourceBundle.getBundle("bayern.steinbrecher.green3.screens.welcome.WelcomeScreen"));
     }
 }

@@ -1,4 +1,4 @@
-package bayern.steinbrecher.green3.screens;
+package bayern.steinbrecher.green3.screens.welcome;
 
 import bayern.steinbrecher.green3.elements.ImageButton;
 import bayern.steinbrecher.green3.features.FeatureRegistry;

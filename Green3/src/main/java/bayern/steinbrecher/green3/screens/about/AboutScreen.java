@@ -1,4 +1,4 @@
-package bayern.steinbrecher.green3.screens;
+package bayern.steinbrecher.green3.screens.about;
 
 import bayern.steinbrecher.screenswitcher.Screen;
 
@@ -8,6 +8,6 @@ public class AboutScreen extends Screen<AboutScreenController> {
     public AboutScreen() {
         super(
                 AboutScreen.class.getResource("AboutScreen.fxml"),
-                ResourceBundle.getBundle("bayern.steinbrecher.green3.screens.AboutScreen"));
+                ResourceBundle.getBundle("bayern.steinbrecher.green3.screens.about.AboutScreen"));
     }
 }
