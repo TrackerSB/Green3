@@ -2,3 +2,37 @@
 author: Stefan Huber
 since: 3u00
  */
+
+GridPane {
+    -fx-hgap: 10;
+}
+
+.titled-pane {
+    -fx-collapsible: false;
+}
+
+#contentRoot {
+    -fx-alignment: CENTER;
+    -fx-max-width: 500;
+}
+
+#appName {
+    -fx-font-size: 50;
+}
+
+#title HBox, #title VBox, #title .text {
+    -fx-alignment: CENTER;
+    -fx-spacing: 10;
+}
+
+#authorInfoPane {
+    -fx-graphic: url("idCard.png");
+}
+
+#buildInfoPane {
+    -fx-graphic: url("cpu.png");
+}
+
+#licenseInfoPane {
+    -fx-graphic: url("license.png");
+}

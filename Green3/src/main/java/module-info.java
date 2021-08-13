@@ -1,5 +1,6 @@
 module bayern.steinbrecher.Green3 {
     requires bayern.steinbrecher.ScreenSwitcher;
+    requires java.desktop;
     requires java.logging;
     requires javafx.controls;
     requires javafx.fxml;

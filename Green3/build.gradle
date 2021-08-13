@@ -1,4 +1,5 @@
 plugins {
+    id 'com.github.gmazzo.buildconfig' version '2.0.2'
     id 'io.freefair.lombok' version '6.1.0-m3'
     // NOTE version 0.0.9 yields an execution error
     id 'org.openjfx.javafxplugin' version '0.0.8'
@@ -50,4 +51,12 @@ compileJava {
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+}
+
+buildConfig {
+    buildConfigField("String", "APP_NAME", "\"${project.name}\"")
+    buildConfigField("String", "APP_VERSION", "\"${project.version}\"")
+    buildConfigField("String", "APP_VERSION_NICKNAME", "\"Featured comback\"")
+    buildConfigField("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
+    packageName("bayern.steinbrecher.green3")
 }

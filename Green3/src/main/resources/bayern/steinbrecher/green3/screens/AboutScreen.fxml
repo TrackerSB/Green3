@@ -3,9 +3,45 @@
 author: Stefan Huber
 since: 3u00
 -->
-<?import javafx.scene.layout.AnchorPane?>
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="bayern.steinbrecher.green3.screens.AboutScreenController"
-            stylesheets="@AboutScreen.css">
-</AnchorPane>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="bayern.steinbrecher.green3.screens.AboutScreenController"
+           stylesheets="@AboutScreen.css"
+           alignment="TOP_CENTER">
+    <VBox id="contentRoot">
+        <HBox id="title">
+            <ImageView>
+                <Image url="@../logo.png"
+                       preserveRatio="true"
+                       requestedWidth="200"/>
+            </ImageView>
+            <VBox>
+                <Text fx:id="appName"/>
+                <Text fx:id="appVersion"/>
+            </VBox>
+        </HBox>
+        <Button text="%backToMainMenu"
+                onAction="#switchToPreviousScreen"/>
+        <TitledPane id="authorInfoPane"
+                    text="%authorInfo">
+            <GridPane fx:id="authorInfo"/>
+        </TitledPane>
+        <TitledPane id="buildInfoPane"
+                    text="%buildInfo">
+            <GridPane fx:id="buildInfo"/>
+        </TitledPane>
+        <TitledPane id="licenseInfoPane"
+                    text="%licensesInfo">
+            <VBox fx:id="licensesInfo"/>
+        </TitledPane>
+    </VBox>
+</StackPane>
