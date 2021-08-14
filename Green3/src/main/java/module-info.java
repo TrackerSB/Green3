@@ -10,6 +10,7 @@ module bayern.steinbrecher.Green3 {
 
     opens bayern.steinbrecher.green3.screens to javafx.fxml;
     opens bayern.steinbrecher.green3.screens.about to javafx.fxml;
+    opens bayern.steinbrecher.green3.screens.featureSelection to javafx.fxml;
     opens bayern.steinbrecher.green3.screens.welcome to javafx.fxml;
 
     exports bayern.steinbrecher.green3 to javafx.graphics;

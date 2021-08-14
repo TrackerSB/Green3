@@ -1,6 +1,7 @@
 package bayern.steinbrecher.green3.features;
 
 import bayern.steinbrecher.green3.screens.about.AboutScreen;
+import bayern.steinbrecher.green3.screens.featureSelection.FeatureSelectionScreen;
 import bayern.steinbrecher.green3.screens.settings.SettingsScreen;
 import bayern.steinbrecher.green3.screens.welcome.WelcomeScreen;
 import bayern.steinbrecher.screenswitcher.ScreenManager;
@@ -42,6 +43,14 @@ public final class FeatureRegistry {
                 WelcomeScreen.class.getResource("power.png"), "exit", sm -> Platform.exit()));
         add(new SettingsScreenFeature("SettingsBack", true,
                 SettingsScreen.class.getResource("back.png"), "back", ScreenManager::switchBack));
+        add(new SettingsScreenFeature("SettingsFeatures", true,
+                SettingsScreen.class.getResource("itemsClipboard.png"), "features", sm -> {
+            try {
+                sm.switchTo(new FeatureSelectionScreen());
+            } catch (ScreenSwitchFailedException ex) {
+                LOGGER.log(Level.SEVERE, "Could not open feature settings", ex);
+            }
+        }));
     }
 
     private FeatureRegistry() {
