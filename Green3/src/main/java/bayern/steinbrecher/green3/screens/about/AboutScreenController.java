@@ -45,7 +45,8 @@ public class AboutScreenController extends ScreenController {
     private static final List<Pair<String, Collection<String>>> AUTHOR_INFO_ENTRIES = List.of(
             new Pair<>("Stefan \"TrackerSB\" Huber", List.of("founder", "mainDeveloper")),
             new Pair<>("\"Smashicons\"", List.of("iconDesigner")),
-            new Pair<>("\"Freepik\"", List.of("iconDesigner"))
+            new Pair<>("\"Freepik\"", List.of("iconDesigner")),
+            new Pair<>("\"Dimitry Miroliubov\"", List.of("iconDesigner"))
     );
 
     // Map license names to license paths
@@ -54,7 +55,8 @@ public class AboutScreenController extends ScreenController {
             "Flaticon", LICENSES_ROOT_DIR.resolve("flaticon.pdf"),
             "Essential Collection", LICENSES_ROOT_DIR.resolve("148705-essential-collection.pdf"),
             "Computer", LICENSES_ROOT_DIR.resolve("3076315-computer.pdf"),
-            "Business and Management", LICENSES_ROOT_DIR.resolve("292082-business-and-management.pdf")
+            "Business and Management", LICENSES_ROOT_DIR.resolve("292082-business-and-management.pdf"),
+            "Clipboard", LICENSES_ROOT_DIR.resolve("340058-clipboard.pdf")
     );
 
     @FXML
