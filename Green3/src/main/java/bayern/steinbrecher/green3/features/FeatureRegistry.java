@@ -1,7 +1,9 @@
 package bayern.steinbrecher.green3.features;
 
 import bayern.steinbrecher.green3.screens.about.AboutScreen;
+import bayern.steinbrecher.green3.screens.settings.SettingsScreen;
 import bayern.steinbrecher.green3.screens.welcome.WelcomeScreen;
+import bayern.steinbrecher.screenswitcher.ScreenManager;
 import bayern.steinbrecher.screenswitcher.ScreenSwitchFailedException;
 import javafx.application.Platform;
 import lombok.NonNull;
@@ -20,7 +22,15 @@ public final class FeatureRegistry {
     private static final Collection<Feature> registeredFeatures = new ArrayList<>();
 
     static {
-        add(new WelcomeScreenFeature("Credits", true,
+        add(new WelcomeScreenFeature("WelcomeSettings", true,
+                WelcomeScreen.class.getResource("settings.png"), "settings", sm -> {
+            try {
+                sm.switchTo(new SettingsScreen());
+            } catch (ScreenSwitchFailedException ex) {
+                LOGGER.log(Level.SEVERE, "Could not open settings screen", ex);
+            }
+        }));
+        add(new WelcomeScreenFeature("WelcomeCredits", true,
                 WelcomeScreen.class.getResource("teamwork.png"), "about", sm -> {
             try {
                 sm.switchTo(new AboutScreen());
@@ -28,8 +38,10 @@ public final class FeatureRegistry {
                 LOGGER.log(Level.SEVERE, "Could not open about screen", ex);
             }
         }));
-        add(new WelcomeScreenFeature("Exit", true,
+        add(new WelcomeScreenFeature("WelcomeExit", true,
                 WelcomeScreen.class.getResource("power.png"), "exit", sm -> Platform.exit()));
+        add(new SettingsScreenFeature("SettingsBack", true,
+                SettingsScreen.class.getResource("back.png"), "back", ScreenManager::switchBack));
     }
 
     private FeatureRegistry() {
