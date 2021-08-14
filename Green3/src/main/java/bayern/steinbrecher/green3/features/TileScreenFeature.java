@@ -15,9 +15,9 @@ public abstract class TileScreenFeature extends Feature {
     private final String descriptionResourceKey;
     private final Consumer<ScreenManager> action;
 
-    protected TileScreenFeature(@NonNull String id, boolean enabled, @NonNull URL imageURL,
+    protected TileScreenFeature(@NonNull String id, boolean mandatory, boolean enabled, @NonNull URL imageURL,
                                 @NonNull String descriptionResourceKey, @NonNull Consumer<ScreenManager> action) {
-        super(id, enabled);
+        super(id, mandatory, enabled);
         this.imageURL = imageURL;
         this.descriptionResourceKey = descriptionResourceKey;
         this.action = action;

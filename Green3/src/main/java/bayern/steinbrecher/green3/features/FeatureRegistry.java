@@ -23,7 +23,7 @@ public final class FeatureRegistry {
     private static final Collection<Feature> registeredFeatures = new ArrayList<>();
 
     static {
-        add(new WelcomeScreenFeature("WelcomeSettings", true,
+        add(new WelcomeScreenFeature("WelcomeSettings", true, true,
                 WelcomeScreen.class.getResource("settings.png"), "settings", sm -> {
             try {
                 sm.switchTo(new SettingsScreen());
@@ -31,7 +31,7 @@ public final class FeatureRegistry {
                 LOGGER.log(Level.SEVERE, "Could not open settings screen", ex);
             }
         }));
-        add(new WelcomeScreenFeature("WelcomeCredits", true,
+        add(new WelcomeScreenFeature("WelcomeCredits", true, true,
                 WelcomeScreen.class.getResource("teamwork.png"), "about", sm -> {
             try {
                 sm.switchTo(new AboutScreen());
@@ -39,11 +39,11 @@ public final class FeatureRegistry {
                 LOGGER.log(Level.SEVERE, "Could not open about screen", ex);
             }
         }));
-        add(new WelcomeScreenFeature("WelcomeExit", true,
+        add(new WelcomeScreenFeature("WelcomeExit", true, true,
                 WelcomeScreen.class.getResource("power.png"), "exit", sm -> Platform.exit()));
-        add(new SettingsScreenFeature("SettingsBack", true,
+        add(new SettingsScreenFeature("SettingsBack", true, true,
                 SettingsScreen.class.getResource("back.png"), "back", ScreenManager::switchBack));
-        add(new SettingsScreenFeature("SettingsFeatures", true,
+        add(new SettingsScreenFeature("SettingsFeatures", true, true,
                 SettingsScreen.class.getResource("itemsClipboard.png"), "features", sm -> {
             try {
                 sm.switchTo(new FeatureSelectionScreen());
