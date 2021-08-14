@@ -8,8 +8,6 @@ import javafx.fxml.FXML;
 import javafx.scene.layout.TilePane;
 import lombok.NonNull;
 
-import java.util.ResourceBundle;
-
 /**
  * @author Stefan Huber
  * @since 3u00
@@ -17,12 +15,10 @@ import java.util.ResourceBundle;
 public class TileScreenController extends ScreenController {
     @FXML
     private TilePane menu;
-    @FXML
-    private ResourceBundle resources;
 
     private @NonNull ImageButton generateMenuEntry(@NonNull TileScreenFeature feature) {
         ImageButton menuEntry = new ImageButton();
-        menuEntry.setText(resources.getString(feature.getDescriptionResourceKey()));
+        menuEntry.setText(feature.getName());
         menuEntry.setImageUrl(feature.getImageURL().toExternalForm());
         menuEntry.setOnAction(mevt -> feature.getAction().accept(getScreenManager()));
         return menuEntry;

@@ -11,6 +11,7 @@ import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,30 +22,32 @@ import java.util.logging.Logger;
 public final class FeatureRegistry {
     private static final Logger LOGGER = Logger.getLogger(FeatureRegistry.class.getName());
     private static final Collection<Feature> registeredFeatures = new ArrayList<>();
+    private static final ResourceBundle resources
+            = ResourceBundle.getBundle("bayern.steinbrecher.green3.features.Features");
 
     static {
-        add(new WelcomeScreenFeature("WelcomeSettings", true, true,
-                WelcomeScreen.class.getResource("settings.png"), "settings", sm -> {
+        add(new WelcomeScreenFeature("WelcomeSettings", resources.getString("settings"), true, true,
+                WelcomeScreen.class.getResource("settings.png"), sm -> {
             try {
                 sm.switchTo(new SettingsScreen());
             } catch (ScreenSwitchFailedException ex) {
                 LOGGER.log(Level.SEVERE, "Could not open settings screen", ex);
             }
         }));
-        add(new WelcomeScreenFeature("WelcomeCredits", true, true,
-                WelcomeScreen.class.getResource("teamwork.png"), "about", sm -> {
+        add(new WelcomeScreenFeature("WelcomeCredits", resources.getString("about"), true, true,
+                WelcomeScreen.class.getResource("teamwork.png"), sm -> {
             try {
                 sm.switchTo(new AboutScreen());
             } catch (ScreenSwitchFailedException ex) {
                 LOGGER.log(Level.SEVERE, "Could not open about screen", ex);
             }
         }));
-        add(new WelcomeScreenFeature("WelcomeExit", true, true,
-                WelcomeScreen.class.getResource("power.png"), "exit", sm -> Platform.exit()));
-        add(new SettingsScreenFeature("SettingsBack", true, true,
-                SettingsScreen.class.getResource("back.png"), "back", ScreenManager::switchBack));
-        add(new SettingsScreenFeature("SettingsFeatures", true, true,
-                SettingsScreen.class.getResource("itemsClipboard.png"), "features", sm -> {
+        add(new WelcomeScreenFeature("WelcomeExit", resources.getString("exit"), true, true,
+                WelcomeScreen.class.getResource("power.png"), sm -> Platform.exit()));
+        add(new SettingsScreenFeature("SettingsBack", resources.getString("back"), true, true,
+                SettingsScreen.class.getResource("back.png"), ScreenManager::switchBack));
+        add(new SettingsScreenFeature("SettingsFeatures", resources.getString("features"), true, true,
+                SettingsScreen.class.getResource("itemsClipboard.png"), sm -> {
             try {
                 sm.switchTo(new FeatureSelectionScreen());
             } catch (ScreenSwitchFailedException ex) {
@@ -66,6 +69,13 @@ public final class FeatureRegistry {
     public static <C extends Feature> Collection<C> find(@NonNull Class<C> type) {
         return registeredFeatures.stream()
                 .filter(f -> type == f.getClass())
+                .map(type::cast)
+                .toList();
+    }
+
+    public static <C extends Feature> Collection<C> findSub(@NonNull Class<C> type) {
+        return registeredFeatures.stream()
+                .filter(f -> type.isAssignableFrom(f.getClass()))
                 .map(type::cast)
                 .toList();
     }

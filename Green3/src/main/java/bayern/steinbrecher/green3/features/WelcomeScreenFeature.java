@@ -11,8 +11,8 @@ import java.util.function.Consumer;
  * @since 3u00
  */
 public class WelcomeScreenFeature extends TileScreenFeature {
-    protected WelcomeScreenFeature(@NonNull String id, boolean mandatory, boolean enabled, @NonNull URL imageURL,
-                                   @NonNull String descriptionResourceKey, @NonNull Consumer<ScreenManager> action) {
-        super(id, mandatory, enabled, imageURL, descriptionResourceKey, action);
+    protected WelcomeScreenFeature(@NonNull String id, @NonNull String name, boolean mandatory,
+                                   boolean enabled, @NonNull URL imageURL, @NonNull Consumer<ScreenManager> action) {
+        super(id, name, mandatory, enabled, imageURL, action);
     }
 }

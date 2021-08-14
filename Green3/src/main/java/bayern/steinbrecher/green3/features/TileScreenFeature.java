@@ -12,23 +12,17 @@ import java.util.function.Consumer;
  */
 public abstract class TileScreenFeature extends Feature {
     private final URL imageURL;
-    private final String descriptionResourceKey;
     private final Consumer<ScreenManager> action;
 
-    protected TileScreenFeature(@NonNull String id, boolean mandatory, boolean enabled, @NonNull URL imageURL,
-                                @NonNull String descriptionResourceKey, @NonNull Consumer<ScreenManager> action) {
-        super(id, mandatory, enabled);
+    protected TileScreenFeature(@NonNull String id, @NonNull String name, boolean mandatory, boolean enabled,
+                                @NonNull URL imageURL, @NonNull Consumer<ScreenManager> action) {
+        super(id, name, mandatory, enabled);
         this.imageURL = imageURL;
-        this.descriptionResourceKey = descriptionResourceKey;
         this.action = action;
     }
 
     public URL getImageURL() {
         return imageURL;
-    }
-
-    public String getDescriptionResourceKey() {
-        return descriptionResourceKey;
     }
 
     public Consumer<ScreenManager> getAction() {

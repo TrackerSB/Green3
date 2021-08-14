@@ -8,17 +8,23 @@ import lombok.NonNull;
  */
 public abstract class Feature {
     private final String id;
+    private final String name;
     private final boolean mandatory;
     private boolean enabled;
 
-    protected Feature(@NonNull String id, boolean mandatory, boolean enabled) {
+    protected Feature(@NonNull String id, @NonNull String name, boolean mandatory, boolean enabled) {
         this.id = id;
+        this.name = name;
         this.mandatory = mandatory;
         this.enabled = enabled;
     }
 
     public String getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public boolean isMandatory() {
