@@ -18,8 +18,8 @@ public class TileScreenController extends ScreenController {
 
     private @NonNull ImageButton generateMenuEntry(@NonNull TileScreenFeature feature) {
         ImageButton menuEntry = new ImageButton();
-        menuEntry.setText(feature.getName());
-        menuEntry.setImageUrl(feature.getImageURL().toExternalForm());
+        menuEntry.setText(feature.getDescription().name());
+        menuEntry.setImageUrl(feature.getDescription().image().toExternalForm());
         menuEntry.setOnAction(mevt -> feature.getAction().accept(getScreenManager()));
         return menuEntry;
     }

@@ -26,28 +26,38 @@ public final class FeatureRegistry {
             = ResourceBundle.getBundle("bayern.steinbrecher.green3.features.Features");
 
     static {
-        add(new WelcomeScreenFeature("WelcomeSettings", resources.getString("settings"), true, true,
-                WelcomeScreen.class.getResource("settings.png"), sm -> {
+        add(new WelcomeScreenFeature("WelcomeSettings",
+                new FeatureDescription(
+                        resources.getString("settings"), WelcomeScreen.class.getResource("settings.png"), true),
+                true, sm -> {
             try {
                 sm.switchTo(new SettingsScreen());
             } catch (ScreenSwitchFailedException ex) {
                 LOGGER.log(Level.SEVERE, "Could not open settings screen", ex);
             }
         }));
-        add(new WelcomeScreenFeature("WelcomeCredits", resources.getString("about"), true, true,
-                WelcomeScreen.class.getResource("teamwork.png"), sm -> {
+        add(new WelcomeScreenFeature("WelcomeCredits",
+                new FeatureDescription(
+                        resources.getString("about"), WelcomeScreen.class.getResource("teamwork.png"), true),
+                true, sm -> {
             try {
                 sm.switchTo(new AboutScreen());
             } catch (ScreenSwitchFailedException ex) {
                 LOGGER.log(Level.SEVERE, "Could not open about screen", ex);
             }
         }));
-        add(new WelcomeScreenFeature("WelcomeExit", resources.getString("exit"), true, true,
-                WelcomeScreen.class.getResource("power.png"), sm -> Platform.exit()));
-        add(new SettingsScreenFeature("SettingsBack", resources.getString("back"), true, true,
-                SettingsScreen.class.getResource("back.png"), ScreenManager::switchBack));
-        add(new SettingsScreenFeature("SettingsFeatures", resources.getString("features"), true, true,
-                SettingsScreen.class.getResource("itemsClipboard.png"), sm -> {
+        add(new WelcomeScreenFeature("WelcomeExit",
+                new FeatureDescription(
+                        resources.getString("exit"), WelcomeScreen.class.getResource("power.png"), true),
+                true, sm -> Platform.exit()));
+        add(new SettingsScreenFeature("SettingsBack",
+                new FeatureDescription(
+                        resources.getString("back"), SettingsScreen.class.getResource("back.png"), true),
+                true, ScreenManager::switchBack));
+        add(new SettingsScreenFeature("SettingsFeatures",
+                new FeatureDescription(
+                        resources.getString("features"), SettingsScreen.class.getResource("itemsClipboard.png"), true),
+                true, sm -> {
             try {
                 sm.switchTo(new FeatureSelectionScreen());
             } catch (ScreenSwitchFailedException ex) {

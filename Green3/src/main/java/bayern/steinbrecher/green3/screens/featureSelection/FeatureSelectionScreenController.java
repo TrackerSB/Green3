@@ -26,7 +26,7 @@ public class FeatureSelectionScreenController extends ScreenController {
             protected void updateItem(Feature item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item != null && !empty) {
-                    setText(item.getName());
+                    setText(item.getDescription().name());
                 }
             }
         });
