@@ -1,8 +1,8 @@
-package bayern.steinbrecher.green3.screens.welcome;
+package bayern.steinbrecher.green3.screens;
 
 import bayern.steinbrecher.green3.elements.ImageButton;
 import bayern.steinbrecher.green3.features.FeatureRegistry;
-import bayern.steinbrecher.green3.features.WelcomeScreenFeature;
+import bayern.steinbrecher.green3.features.TileScreenFeature;
 import bayern.steinbrecher.screenswitcher.ScreenController;
 import javafx.fxml.FXML;
 import javafx.scene.layout.TilePane;
@@ -14,13 +14,13 @@ import java.util.ResourceBundle;
  * @author Stefan Huber
  * @since 3u00
  */
-public class WelcomeScreenController extends ScreenController {
+public class TileScreenController extends ScreenController {
     @FXML
     private TilePane menu;
     @FXML
     private ResourceBundle resources;
 
-    private @NonNull ImageButton generateMenuEntry(@NonNull WelcomeScreenFeature feature) {
+    private @NonNull ImageButton generateMenuEntry(@NonNull TileScreenFeature feature) {
         ImageButton menuEntry = new ImageButton();
         menuEntry.setText(resources.getString(feature.getDescriptionResourceKey()));
         menuEntry.setImageUrl(feature.getImageURL().toExternalForm());
@@ -28,9 +28,13 @@ public class WelcomeScreenController extends ScreenController {
         return menuEntry;
     }
 
-    @FXML
-    private void initialize() {
-        FeatureRegistry.find(WelcomeScreenFeature.class)
+    /**
+     * This method is to be called by {@link TileScreen} only.
+     * FIXME Avoid calling this method manually by providing the {@code featureSet} parameter to the controller
+     * directly.
+     */
+    void populateWithTiles(@NonNull Class<? extends TileScreenFeature> featureSet) {
+        FeatureRegistry.find(featureSet)
                 .stream()
                 .map(this::generateMenuEntry)
                 .forEach(entry -> menu.getChildren().add(entry));

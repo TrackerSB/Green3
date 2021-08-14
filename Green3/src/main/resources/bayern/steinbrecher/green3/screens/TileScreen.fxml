@@ -6,7 +6,7 @@ since: 3u00
 <?import javafx.scene.layout.TilePane?>
 <TilePane xmlns="http://javafx.com/javafx"
           xmlns:fx="http://javafx.com/fxml"
-          fx:controller="bayern.steinbrecher.green3.screens.welcome.WelcomeScreenController"
-          stylesheets="@WelcomeScreen.css"
+          fx:controller="bayern.steinbrecher.green3.screens.TileScreenController"
+          stylesheets="@TileScreen.css"
           fx:id="menu">
 </TilePane>

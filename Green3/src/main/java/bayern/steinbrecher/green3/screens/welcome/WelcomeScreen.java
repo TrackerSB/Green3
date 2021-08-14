@@ -1,6 +1,7 @@
 package bayern.steinbrecher.green3.screens.welcome;
 
-import bayern.steinbrecher.screenswitcher.Screen;
+import bayern.steinbrecher.green3.features.WelcomeScreenFeature;
+import bayern.steinbrecher.green3.screens.TileScreen;
 
 import java.util.ResourceBundle;
 
@@ -8,10 +9,9 @@ import java.util.ResourceBundle;
  * @author Stefan Huber
  * @since 3u00
  */
-public class WelcomeScreen extends Screen<WelcomeScreenController> {
+public class WelcomeScreen extends TileScreen {
     public WelcomeScreen() {
-        super(
-                WelcomeScreen.class.getResource("WelcomeScreen.fxml"),
-                ResourceBundle.getBundle("bayern.steinbrecher.green3.screens.welcome.WelcomeScreen"));
+        super(ResourceBundle.getBundle("bayern.steinbrecher.green3.screens.welcome.WelcomeScreen"),
+                WelcomeScreenFeature.class);
     }
 }

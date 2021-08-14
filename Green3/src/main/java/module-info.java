@@ -8,6 +8,7 @@ module bayern.steinbrecher.Green3 {
 
     requires static lombok;
 
+    opens bayern.steinbrecher.green3.screens to javafx.fxml;
     opens bayern.steinbrecher.green3.screens.about to javafx.fxml;
     opens bayern.steinbrecher.green3.screens.welcome to javafx.fxml;
 
