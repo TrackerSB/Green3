@@ -2,11 +2,15 @@ package bayern.steinbrecher.green3.features;
 
 import lombok.NonNull;
 
+import java.util.ResourceBundle;
+
 /**
  * @author Stefan Huber
  * @since 3u00
  */
 public abstract class Feature {
+    protected static final ResourceBundle resources
+            = ResourceBundle.getBundle("bayern.steinbrecher.green3.features.Features");
     private final String id;
     private final FeatureDescription description;
     private boolean enabled;
