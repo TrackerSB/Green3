@@ -10,8 +10,8 @@ import java.util.function.Consumer;
  * @since 3u00
  */
 public class SettingsScreenFeature extends TileScreenFeature {
-    protected SettingsScreenFeature(@NonNull String id, @NonNull FeatureDescription description,
-                                    boolean enabled, @NonNull Consumer<ScreenManager> action) {
+    SettingsScreenFeature(@NonNull String id, @NonNull FeatureDescription description,
+                          boolean enabled, @NonNull Consumer<ScreenManager> action) {
         super(id, description, enabled, action);
     }
 }
