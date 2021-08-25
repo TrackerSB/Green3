@@ -102,18 +102,18 @@ public class FeatureSelectionScreenController extends ScreenController {
         @Override
         public String getDescription() {
             try {
-                Method getFeatureSetDescription = featureType.getMethod("getFeatureSetDescription");
+                Method getFeatureSetDescription = getFeatureType().getMethod("getFeatureSetDescription");
                 return (String) getFeatureSetDescription.invoke(null);
             } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
                 LOGGER.log(Level.WARNING, "Could not find feature set description", ex);
-                return String.format("<Not provided for \"%s\">", featureType.getName());
+                return String.format("<Not provided for \"%s\">", getFeatureType().getName());
             }
         }
 
         @Override
         public URL getImageURL() {
             try {
-                Method getFeatureSetImageURL = featureType.getMethod("getFeatureSetImageURL");
+                Method getFeatureSetImageURL = getFeatureType().getMethod("getFeatureSetImageURL");
                 return (URL) getFeatureSetImageURL.invoke(null);
             } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
                 LOGGER.log(Level.WARNING, "Could not find feature set icon", ex);
@@ -135,13 +135,15 @@ public class FeatureSelectionScreenController extends ScreenController {
 
         @Override
         public String getDescription() {
-            return feature.getDescription()
+            return getFeature()
+                    .getDescription()
                     .name();
         }
 
         @Override
         public URL getImageURL() {
-            return feature.getDescription()
+            return getFeature()
+                    .getDescription()
                     .image();
         }
     }
