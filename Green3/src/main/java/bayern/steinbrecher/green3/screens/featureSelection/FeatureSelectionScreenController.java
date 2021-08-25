@@ -1,9 +1,11 @@
 package bayern.steinbrecher.green3.screens.featureSelection;
 
 import bayern.steinbrecher.green3.features.Feature;
+import bayern.steinbrecher.green3.features.FeatureDescription;
 import bayern.steinbrecher.green3.features.FeatureRegistry;
 import bayern.steinbrecher.screenswitcher.ScreenController;
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -14,8 +16,10 @@ import lombok.NonNull;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,8 +39,12 @@ public class FeatureSelectionScreenController extends ScreenController {
             protected void updateItem(FeatureTreeItem item, boolean empty) {
                 super.updateItem(item, empty);
                 if (item != null && !empty) {
-                    setText(item.getDescription());
-                    setGraphic(item.getImage());
+                    CheckBox itemBox = new CheckBox(item.getDescription());
+                    itemBox.setGraphic(item.getImage());
+                    itemBox.setAllowIndeterminate(true);
+                    item.isEnabled().ifPresentOrElse(itemBox::setSelected, () -> itemBox.setIndeterminate(true));
+                    itemBox.setDisable(item.isMandatory());
+                    setGraphic(itemBox);
                 }
             }
         });
@@ -80,9 +88,12 @@ public class FeatureSelectionScreenController extends ScreenController {
             return new ImageView(new Image(getImageURL().toExternalForm(), 30d, 30d, true, true));
         }
 
+        public abstract Optional<Boolean> isEnabled();
+
+        public abstract boolean isMandatory();
+
         public final TreeItem<FeatureTreeItem> generateTreeItem() {
             TreeItem<FeatureTreeItem> item = new TreeItem<>(this);
-            item.setGraphic(getImage());
             item.setExpanded(true);
             return item;
         }
@@ -120,6 +131,30 @@ public class FeatureSelectionScreenController extends ScreenController {
                 return null;
             }
         }
+
+        @Override
+        public Optional<Boolean> isEnabled() {
+            Collection<? extends Feature> subFeatures = FeatureRegistry.findSub(getFeatureType());
+            Boolean enabledState;
+
+            boolean allEnabled = subFeatures.stream().allMatch(Feature::isEnabled);
+            if (allEnabled) {
+                enabledState = true;
+            } else {
+                boolean noneEnabled = subFeatures.stream().noneMatch(Feature::isEnabled);
+                enabledState = noneEnabled ? false : null;
+            }
+
+            return Optional.ofNullable(enabledState);
+        }
+
+        @Override
+        public boolean isMandatory() {
+            return FeatureRegistry.findSub(getFeatureType())
+                    .stream()
+                    .map(Feature::getDescription)
+                    .allMatch(FeatureDescription::mandatory);
+        }
     }
 
     private static class FeatureLeaf extends FeatureTreeItem {
@@ -145,6 +180,18 @@ public class FeatureSelectionScreenController extends ScreenController {
             return getFeature()
                     .getDescription()
                     .image();
+        }
+
+        @Override
+        public Optional<Boolean> isEnabled() {
+            return Optional.of(getFeature().isEnabled());
+        }
+
+        @Override
+        public boolean isMandatory() {
+            return getFeature()
+                    .getDescription()
+                    .mandatory();
         }
     }
 }
