@@ -3,11 +3,17 @@
 author: Stefan Huber
 since: 3u00
 -->
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.TreeView?>
-<TreeView xmlns="http://javafx.com/javafx"
-          xmlns:fx="http://javafx.com/fxml"
-          fx:controller="bayern.steinbrecher.green3.screens.featureSelection.FeatureSelectionScreenController"
-          stylesheets="@FeatureSelectionScreen.css"
-          fx:id="featureTree"
-          showRoot="false">
-</TreeView>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="bayern.steinbrecher.green3.screens.featureSelection.FeatureSelectionScreenController"
+      stylesheets="@FeatureSelectionScreen.css">
+    <Button onAction="#switchToPreviousScreen"
+            text="%back"/>
+    <TreeView fx:id="featureTree"
+              showRoot="false"
+              VBox.vgrow="ALWAYS">
+    </TreeView>
+</VBox>
