@@ -13,6 +13,7 @@ public final class FeatureRegistry {
     private static final Collection<Feature> registeredFeatures = new ArrayList<>();
 
     static {
+        addAll(MemberManagementScreenFeature.FEATURES);
         addAll(WelcomeScreenFeature.FEATURES);
         addAll(SettingsScreenFeature.FEATURES);
     }
@@ -27,7 +28,7 @@ public final class FeatureRegistry {
         registeredFeatures.add(feature);
     }
 
-    public static void addAll(@NonNull Iterable<? extends Feature> featureSet){
+    public static void addAll(@NonNull Iterable<? extends Feature> featureSet) {
         featureSet.forEach(FeatureRegistry::add);
     }
 

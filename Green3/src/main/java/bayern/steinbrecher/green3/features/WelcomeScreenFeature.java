@@ -1,6 +1,7 @@
 package bayern.steinbrecher.green3.features;
 
 import bayern.steinbrecher.green3.screens.about.AboutScreen;
+import bayern.steinbrecher.green3.screens.memberManagement.MemberManagementScreen;
 import bayern.steinbrecher.green3.screens.settings.SettingsScreen;
 import bayern.steinbrecher.green3.screens.welcome.WelcomeScreen;
 import bayern.steinbrecher.screenswitcher.ScreenManager;
@@ -20,6 +21,17 @@ import java.util.logging.Logger;
 public class WelcomeScreenFeature extends TileScreenFeature {
     private static final Logger LOGGER = Logger.getLogger(WelcomeScreenFeature.class.getName());
     static Iterable<WelcomeScreenFeature> FEATURES = List.of(
+            new WelcomeScreenFeature("WelcomeMemberManagement",
+                    new FeatureDescription(
+                            resources.getString("memberManagement"),
+                            WelcomeScreen.class.getResource("content-management.png"), true),
+                    true, sm -> {
+                try {
+                    sm.switchTo(new MemberManagementScreen());
+                } catch (ScreenSwitchFailedException ex) {
+                    LOGGER.log(Level.SEVERE, "Could not switch to member management screen", ex);
+                }
+            }),
             new WelcomeScreenFeature("WelcomeSettings",
                     new FeatureDescription(
                             resources.getString("settings"),
