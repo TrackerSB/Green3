@@ -1,5 +1,9 @@
 module bayern.steinbrecher.Green3 {
+    requires bayern.steinbrecher.DBConnector;
     requires bayern.steinbrecher.ScreenSwitcher;
+    requires bayern.steinbrecher.SepaXMLGenerator;
+    requires io.soabase.recordbuilder.core;
+    requires java.compiler;
     requires java.desktop;
     requires java.logging;
     requires javafx.controls;

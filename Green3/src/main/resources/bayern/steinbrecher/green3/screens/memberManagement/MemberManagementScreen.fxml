@@ -4,6 +4,7 @@ author: Stefan Huber
 since: 3u00
 -->
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
@@ -17,7 +18,12 @@ since: 3u00
                     text="%backToMainMenu"/>
         </top>
         <center>
-            <TableView fx:id="memberView"/>
+            <ScrollPane fx:id="scrollableMemberView"
+                        fitToHeight="true"
+                        vbarPolicy="NEVER">
+                <TableView fx:id="memberView"
+                           minWidth="${scrollableMemberView.width}"/>
+            </ScrollPane>
         </center>
     </BorderPane>
 </StackPane>
