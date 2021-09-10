@@ -4,9 +4,9 @@ import bayern.steinbrecher.dbConnector.scheme.ColumnParser;
 import bayern.steinbrecher.dbConnector.scheme.RegexColumnPattern;
 import bayern.steinbrecher.dbConnector.scheme.SimpleColumnPattern;
 import bayern.steinbrecher.dbConnector.scheme.TableScheme;
-import bayern.steinbrecher.sepaxmlgenerator.BIC;
-import bayern.steinbrecher.sepaxmlgenerator.IBAN;
+import bayern.steinbrecher.sepaxmlgenerator.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -94,7 +94,16 @@ public final class Tables {
                             },
                             cn -> Integer.parseInt(cn.substring(0, cn.length() - "MitgliedGeehrt".length())))
             ),
-            () -> MembershipBuilder.builder().build(),
+            // Initialize membership while ensuring nested builders are not null
+            () -> MembershipBuilder.builder()
+                    .distinctions(new HashSet<>())
+                    .mandate(DirectDebitMandateBuilder.builder()
+                            .owner(AccountHolderBuilder.builder().build())
+                            .build())
+                    .member(PersonBuilder.builder()
+                            .home(AddressBuilder.builder().build())
+                            .build())
+                    .build(),
             ms -> ms.collect(Collectors.toSet()) // FIXME Check validity of built members
     );
 }
