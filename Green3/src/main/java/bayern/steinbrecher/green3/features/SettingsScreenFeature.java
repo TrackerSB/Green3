@@ -1,6 +1,7 @@
 package bayern.steinbrecher.green3.features;
 
 import bayern.steinbrecher.green3.screens.featureSelection.FeatureSelectionScreen;
+import bayern.steinbrecher.green3.screens.profileSettings.ProfileSettingsScreen;
 import bayern.steinbrecher.green3.screens.settings.SettingsScreen;
 import bayern.steinbrecher.screenswitcher.ScreenManager;
 import bayern.steinbrecher.screenswitcher.ScreenSwitchFailedException;
@@ -23,6 +24,17 @@ public class SettingsScreenFeature extends TileScreenFeature {
                             resources.getString("back"),
                             SettingsScreen.class.getResource("back.png"), true),
                     true, ScreenManager::switchBack),
+            new SettingsScreenFeature("SettingsProfiles",
+                    new FeatureDescription(
+                            resources.getString("profiles"),
+                            SettingsScreen.class.getResource("gear.png"), true),
+                    true, sm -> {
+                try {
+                    sm.switchTo(new ProfileSettingsScreen());
+                } catch (ScreenSwitchFailedException ex) {
+                    LOGGER.log(Level.SEVERE, "Could not show screen of profile settings", ex);
+                }
+            }),
             new SettingsScreenFeature("SettingsFeatures",
                     new FeatureDescription(
                             resources.getString("features"),

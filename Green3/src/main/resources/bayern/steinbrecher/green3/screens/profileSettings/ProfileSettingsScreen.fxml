@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+author: Stefan Huber
+since: 3u00
+-->
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.StackPane?>
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="bayern.steinbrecher.green3.screens.profileSettings.ProfileSettingsScreenController"
+           stylesheets="@ProfileSettingsScreen.css">
+    <Button onAction="#switchToPreviousScreen"
+            text="%backToSettings"/>
+</StackPane>
