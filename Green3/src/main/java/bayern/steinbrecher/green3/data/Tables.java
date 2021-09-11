@@ -102,31 +102,91 @@ public final class Tables {
                             ColumnParser.BOOLEAN_COLUMN_PARSER,
                             (m, a) -> m.withState(Optional.of(a ? ActiveState.ACTIVE : ActiveState.PASSIVE)),
                             m -> m.state().isPresent() && m.state().get() == ActiveState.ACTIVE),
+                    new SimpleColumnPattern<>("IstEhrenmitglied",
+                            ColumnParser.BOOLEAN_COLUMN_PARSER,
+                            (m, h) -> m.withHonoraryMember(Optional.of(h)),
+                            m -> m.honoraryMember().get()),
+                    new SimpleColumnPattern<>("IstGründungsmitglied",
+                            ColumnParser.BOOLEAN_COLUMN_PARSER,
+                            (m, h) -> m.withFounderMember(Optional.of(h)),
+                            m -> m.founderMember().get()),
+                    new SimpleColumnPattern<>("hatGauEhrenzeichen",
+                            ColumnParser.BOOLEAN_COLUMN_PARSER,
+                            (m, h) -> m.withGauDistinction(Optional.of(h)),
+                            m -> m.gauDistinction().get()),
+                    new SimpleColumnPattern<>("IstEhrenschriftführer",
+                            ColumnParser.BOOLEAN_COLUMN_PARSER,
+                            (m, h) -> m.withHonorarySecretary(Optional.of(h)),
+                            m -> m.honorarySecretary().get()),
+                    new SimpleColumnPattern<>("IstEhrenvorstand",
+                            ColumnParser.BOOLEAN_COLUMN_PARSER,
+                            (m, h) -> m.withHonoraryPrincipal(Optional.of(h)),
+                            m -> m.honoraryPrincipal().get()),
+                    new SimpleColumnPattern<>("IstInVorstandschaft",
+                            ColumnParser.BOOLEAN_COLUMN_PARSER,
+                            (m, h) -> m.withManagementBoardMember(Optional.of(h)),
+                            m -> m.managementBoardMember().get()),
                     new SimpleColumnPattern<>("AusgetretenSeit",
                             ColumnParser.LOCALDATE_COLUMN_PARSER,
                             (m, ld) -> m.withLeavingDate(Optional.ofNullable(ld)),
-                            membership -> membership.leavingDate().orElse(null),
+                            m -> m.leavingDate().orElse(null),
+                            Optional.of(Optional.empty()), false, true),
+                    new SimpleColumnPattern<>("MitwirkendSeit",
+                            ColumnParser.INTEGER_COLUMN_PARSER,
+                            (m, cy) -> m.withFirstContributionYear(Optional.ofNullable(cy)),
+                            m -> m.firstContributionYear().orElse(null),
                             Optional.of(Optional.empty()), false, true),
                     new RegexColumnPattern<>("^\\d+MitgliedGeehrt$",
                             ColumnParser.BOOLEAN_COLUMN_PARSER,
                             (m, year, honored) -> {
                                 if (honored) {
-                                    m.distinctions().add(year);
+                                    m.memberDistinctions().add(year);
                                 }
                                 return m;
                             },
                             cn -> Integer.parseInt(cn.substring(0, cn.length() - "MitgliedGeehrt".length())),
-                            (m, k) -> m.distinctions().contains(k))
+                            (m, k) -> m.memberDistinctions().contains(k)),
+                    new RegexColumnPattern<>("^\\d+MitwirkendGeehrt$",
+                            ColumnParser.BOOLEAN_COLUMN_PARSER,
+                            (m, year, honored) -> {
+                                if (honored) {
+                                    m.contributionDistinctions().add(year);
+                                }
+                                return m;
+                            },
+                            cn -> Integer.parseInt(cn.substring(0, cn.length() - "MitwirkendGeehrt".length())),
+                            (m, k) -> m.contributionDistinctions().contains(k)),
+                    new SimpleColumnPattern<>("Telefonnummer",
+                            ColumnParser.STRING_COLUMN_PARSER,
+                            MembershipBuilder.With::withPhoneNumber,
+                            Membership::phoneNumber),
+                    new SimpleColumnPattern<>("Handynummer",
+                            ColumnParser.STRING_COLUMN_PARSER,
+                            MembershipBuilder.With::withMobileNumber,
+                            Membership::mobileNumber),
+                    new SimpleColumnPattern<>("E-Mail",
+                            ColumnParser.STRING_COLUMN_PARSER,
+                            MembershipBuilder.With::withEmail,
+                            Membership::email)
             ),
-            // Initialize membership while ensuring nested builders are not null
+            /* Initialize membership while ensuring nested builders are not null and fields have appropriate default
+             * values
+             */
             () -> MembershipBuilder.builder()
-                    .distinctions(new HashSet<>())
+                    .contribution(Optional.empty())
+                    .contributionDistinctions(new HashSet<>())
+                    .memberDistinctions(new HashSet<>())
+                    .firstContributionYear(Optional.empty())
+                    .founderMember(Optional.empty())
+                    .honoraryMember(Optional.empty())
+                    .leavingDate(Optional.empty())
                     .mandate(DirectDebitMandateBuilder.builder()
                             .owner(AccountHolderBuilder.builder().build())
                             .build())
                     .member(PersonBuilder.builder()
                             .home(AddressBuilder.builder().build())
                             .build())
+                    .state(Optional.empty())
                     .build(),
             ms -> ms.collect(Collectors.toSet()) // FIXME Check validity of built members
     );

@@ -4,7 +4,6 @@ import bayern.steinbrecher.sepaxmlgenerator.DirectDebitMandate;
 import io.soabase.recordbuilder.core.RecordBuilder;
 
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -21,6 +20,17 @@ public record Membership(
         Optional<Double> contribution,
         Optional<ActiveState> state,
         Optional<LocalDate> leavingDate,
-        Set<Integer> distinctions
+        Set<Integer> memberDistinctions,
+        Set<Integer> contributionDistinctions,
+        Optional<Boolean> honoraryMember,
+        Optional<Boolean> founderMember,
+        Optional<Integer> firstContributionYear,
+        String phoneNumber,
+        String mobileNumber,
+        String email,
+        Optional<Boolean> gauDistinction,
+        Optional<Boolean> honorarySecretary,
+        Optional<Boolean> honoraryPrincipal,
+        Optional<Boolean> managementBoardMember
 ) implements MembershipBuilder.With {
 }
