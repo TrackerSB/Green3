@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -37,6 +38,8 @@ public class MemberManagementScreenController extends ScreenController {
     private static final Logger LOGGER = Logger.getLogger(MemberManagementScreenController.class.getName());
     @FXML
     private BorderPane memberView;
+    @FXML
+    private ResourceBundle resources;
 
     private DBConnection connectToMemberDB() {
         try {
@@ -100,7 +103,7 @@ public class MemberManagementScreenController extends ScreenController {
 
     @Override
     protected void afterScreenManagerIsSet() {
-        CompletableFuture.runAsync(() -> getScreenManager().showOverlay("Retrieving data..."))
+        CompletableFuture.runAsync(() -> getScreenManager().showOverlay(resources.getString("retrievingData")))
                 .thenApply(v -> connectToMemberDB())
                 .thenAccept(this::setupMemberViewColumns)
                 .handle((result, throwable) -> {
