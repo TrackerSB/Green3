@@ -11,6 +11,7 @@ import java.util.ResourceBundle;
  * @since 3u00
  */
 public abstract class TileScreen extends Screen<TileScreenController> {
+    @NonNull
     private final Class<? extends TileScreenFeature> featureSet;
 
     protected TileScreen(@NonNull ResourceBundle resourceBundle,

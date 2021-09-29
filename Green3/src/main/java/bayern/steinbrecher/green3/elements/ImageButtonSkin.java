@@ -16,6 +16,7 @@ import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import lombok.NonNull;
 
 /**
  * @author Stefan Huber
@@ -23,7 +24,7 @@ import javafx.scene.text.TextAlignment;
  */
 public class ImageButtonSkin extends SkinBase<ImageButton> {
 
-    public ImageButtonSkin(final ImageButton control) {
+    public ImageButtonSkin(@NonNull ImageButton control) {
         super(control);
 
         final StackPane contentHolder = new StackPane();

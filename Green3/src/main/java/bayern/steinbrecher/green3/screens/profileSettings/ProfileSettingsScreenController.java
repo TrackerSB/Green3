@@ -100,12 +100,14 @@ public class ProfileSettingsScreenController extends ScreenController {
     }
 
     private static class FeatureLevelNode extends FeatureTreeItem {
+        @NonNull
         private final Class<? extends Feature> featureType;
 
         public FeatureLevelNode(@NonNull Class<? extends Feature> featureType) {
             this.featureType = featureType;
         }
 
+        @NonNull
         public Class<? extends Feature> getFeatureType() {
             return featureType;
         }
@@ -158,12 +160,14 @@ public class ProfileSettingsScreenController extends ScreenController {
     }
 
     private static class FeatureLeaf extends FeatureTreeItem {
+        @NonNull
         private final Feature feature;
 
         public FeatureLeaf(@NonNull Feature feature) {
             this.feature = feature;
         }
 
+        @NonNull
         public Feature getFeature() {
             return feature;
         }

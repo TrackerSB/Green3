@@ -16,7 +16,8 @@ public class TileScreenController extends ScreenController {
     @FXML
     private TilePane menu;
 
-    private @NonNull ImageButton generateMenuEntry(@NonNull TileScreenFeature feature) {
+    @NonNull
+    private ImageButton generateMenuEntry(@NonNull TileScreenFeature feature) {
         ImageButton menuEntry = new ImageButton();
         menuEntry.setText(feature.getDescription().name());
         menuEntry.setImageUrl(feature.getDescription().image().toExternalForm());
