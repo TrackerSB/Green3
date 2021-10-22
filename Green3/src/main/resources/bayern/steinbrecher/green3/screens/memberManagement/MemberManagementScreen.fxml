@@ -3,17 +3,27 @@
 author: Stefan Huber
 since: 3u00
 -->
+<?import bayern.steinbrecher.green3.elements.TableFilterList?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
            fx:controller="bayern.steinbrecher.green3.screens.memberManagement.MemberManagementScreenController"
            stylesheets="@MemberManagementScreen.css">
-    <BorderPane fx:id="memberView">
+    <BorderPane>
         <top>
             <Button onAction="#switchToPreviousScreen"
                     text="%backToMainMenu"/>
         </top>
+        <center>
+            <VBox>
+                <TableFilterList fx:id="memberViewFilterList"/>
+                <HBox fx:id="memberViewPlaceholder"
+                      VBox.vgrow="ALWAYS"/>
+            </VBox>
+        </center>
     </BorderPane>
 </StackPane>

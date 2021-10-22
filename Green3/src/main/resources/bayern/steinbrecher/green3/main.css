@@ -1,3 +1,7 @@
+:invalid {
+    -fx-border-color: red;
+}
+
 .screen {
     -fx-background-color: white;
 }

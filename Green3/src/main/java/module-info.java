@@ -1,4 +1,5 @@
 module bayern.steinbrecher.Green3 {
+    requires bayern.steinbrecher.CheckedElements;
     requires bayern.steinbrecher.DBConnector;
     requires bayern.steinbrecher.ScreenSwitcher;
     requires bayern.steinbrecher.SepaXMLGenerator;
@@ -12,6 +13,8 @@ module bayern.steinbrecher.Green3 {
 
     requires static lombok;
 
+    exports bayern.steinbrecher.green3.elements to javafx.fxml;
+
     opens bayern.steinbrecher.green3.screens to javafx.fxml;
     opens bayern.steinbrecher.green3.screens.about to javafx.fxml;
     opens bayern.steinbrecher.green3.screens.memberManagement to javafx.fxml;
@@ -20,4 +23,6 @@ module bayern.steinbrecher.Green3 {
 
     exports bayern.steinbrecher.green3 to javafx.graphics;
     exports bayern.steinbrecher.green3.features to javafx.graphics;
+    exports bayern.steinbrecher.green3.screens.memberManagement to javafx.fxml;
+    opens bayern.steinbrecher.green3.elements to javafx.fxml;
 }

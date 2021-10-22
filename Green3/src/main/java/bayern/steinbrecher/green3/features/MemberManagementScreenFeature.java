@@ -5,7 +5,7 @@ import lombok.NonNull;
 import java.util.List;
 
 public class MemberManagementScreenFeature extends Feature {
-    static Iterable<WelcomeScreenFeature> FEATURES = List.of();
+    static Iterable<MemberManagementScreenFeature> FEATURES = List.of();
 
     private MemberManagementScreenFeature(@NonNull String id, @NonNull FeatureDescription description, boolean enabled) {
         super(id, description, enabled);

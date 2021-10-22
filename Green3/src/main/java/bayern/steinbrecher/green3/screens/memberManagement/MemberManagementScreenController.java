@@ -11,12 +11,15 @@ import bayern.steinbrecher.dbConnector.query.SupportedDBMS;
 import bayern.steinbrecher.dbConnector.scheme.ColumnParser;
 import bayern.steinbrecher.green3.data.Membership;
 import bayern.steinbrecher.green3.data.Tables;
+import bayern.steinbrecher.green3.elements.TableFilterList;
 import bayern.steinbrecher.screenswitcher.ScreenController;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import lombok.NonNull;
 
 import java.net.UnknownHostException;
@@ -37,7 +40,9 @@ import java.util.logging.Logger;
 public class MemberManagementScreenController extends ScreenController {
     private static final Logger LOGGER = Logger.getLogger(MemberManagementScreenController.class.getName());
     @FXML
-    private BorderPane memberView;
+    private Pane memberViewPlaceholder;
+    @FXML
+    private TableFilterList memberViewFilterList;
     @FXML
     private ResourceBundle resources;
 
@@ -64,7 +69,7 @@ public class MemberManagementScreenController extends ScreenController {
     }
 
     @SuppressWarnings("unchecked")
-    private static <C> ColumnParser<C> getParser(DBConnection.Column<?, C> column) {
+    private static <C> ColumnParser<C> getParser(@NonNull DBConnection.Column<?, C> column) {
         if (Boolean.class.isAssignableFrom(column.getColumnType())) {
             return (ColumnParser<C>) ColumnParser.BOOLEAN_COLUMN_PARSER;
         }
@@ -92,9 +97,13 @@ public class MemberManagementScreenController extends ScreenController {
             Optional<DBConnection.Table<Set<Membership>, Membership>> optMemberTable
                     = dbConnection.getTable(Tables.MEMBERS);
             if (optMemberTable.isPresent()) {
+                memberViewFilterList.setTableScheme(Tables.MEMBERS);
+
                 TableView<Membership> memberTable = optMemberTable.get().createTableView();
                 memberTable.setItems(FXCollections.observableArrayList(dbConnection.getTableContent(Tables.MEMBERS)));
-                Platform.runLater(() -> memberView.setCenter(memberTable));
+                VBox.setVgrow(memberTable, Priority.ALWAYS);
+
+                Platform.runLater(() -> memberViewPlaceholder.getChildren().addAll(memberTable));
             }
         } catch (QueryFailedException | GenerationFailedException ex) {
             throw new CompletionException("Could not populate member view", ex);
