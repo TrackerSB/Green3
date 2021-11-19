@@ -50,17 +50,17 @@ public class MemberManagementScreenController extends ScreenController {
         try {
             return new SshConnection(
                     SupportedDBMS.MY_SQL,
-                    "rdbms.strato.de",
+                    "<dbHost>",
                     3306,
-                    "DB4401428",
-                    "ssh.strato.de",
+                    "<dbName>",
+                    "<sshHost>",
                     22,
                     StandardCharsets.UTF_8,
                     new SshCredentials(
-                            "U4401428",
-                            "2cqhbunuMp6peXq",
-                            "traunviertler-traunwalchen.de",
-                            "wXjziib5FNcJ6aG"
+                            "<dbUsername>",
+                            "<dbPassword>",
+                            "<sshUsername>",
+                            "<sshPassword>"
                     )
             );
         } catch (ConnectionFailedException | AuthException | UnknownHostException ex) {
