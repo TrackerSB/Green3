@@ -8,10 +8,10 @@ import bayern.steinbrecher.dbConnector.credentials.SshCredentials;
 import bayern.steinbrecher.dbConnector.query.GenerationFailedException;
 import bayern.steinbrecher.dbConnector.query.QueryFailedException;
 import bayern.steinbrecher.dbConnector.query.SupportedDBMS;
-import bayern.steinbrecher.dbConnector.scheme.ColumnParser;
 import bayern.steinbrecher.green3.data.Membership;
 import bayern.steinbrecher.green3.data.Tables;
 import bayern.steinbrecher.green3.elements.TableFilterList;
+import bayern.steinbrecher.green3.features.MemberManagementScreenFeature;
 import bayern.steinbrecher.screenswitcher.ScreenController;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -24,7 +24,6 @@ import lombok.NonNull;
 
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -46,6 +45,12 @@ public class MemberManagementScreenController extends ScreenController {
     @FXML
     private ResourceBundle resources;
 
+    @FXML
+    private void initialize() {
+        memberViewFilterList.setVisible(MemberManagementScreenFeature.TABLE_FILTERS.isEnabled());
+    }
+
+    @NonNull
     private DBConnection connectToMemberDB() {
         try {
             return new SshConnection(
@@ -68,36 +73,13 @@ public class MemberManagementScreenController extends ScreenController {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private static <C> ColumnParser<C> getParser(@NonNull DBConnection.Column<?, C> column) {
-        if (Boolean.class.isAssignableFrom(column.getColumnType())) {
-            return (ColumnParser<C>) ColumnParser.BOOLEAN_COLUMN_PARSER;
-        }
-        if (Double.class.isAssignableFrom(column.getColumnType())) {
-            return (ColumnParser<C>) ColumnParser.DOUBLE_COLUMN_PARSER;
-        }
-        if (Integer.class.isAssignableFrom(column.getColumnType())) {
-            return (ColumnParser<C>) ColumnParser.INTEGER_COLUMN_PARSER;
-        }
-        if (LocalDate.class.isAssignableFrom(column.getColumnType())) {
-            return (ColumnParser<C>) ColumnParser.LOCALDATE_COLUMN_PARSER;
-        }
-        if (String.class.isAssignableFrom(column.getColumnType())) {
-            return (ColumnParser<C>) ColumnParser.STRING_COLUMN_PARSER;
-        }
-
-        LOGGER.log(Level.WARNING, String.format(
-                "There is no appropriate column parser available for type %s. Assume it's String",
-                column.getColumnType().getName()));
-        return (ColumnParser<C>) ColumnParser.STRING_COLUMN_PARSER;
-    }
-
     private void setupMemberViewColumns(@NonNull DBConnection dbConnection) {
         try {
             Optional<DBConnection.Table<Set<Membership>, Membership>> optMemberTable
                     = dbConnection.getTable(Tables.MEMBERS);
             if (optMemberTable.isPresent()) {
-                memberViewFilterList.setTableScheme(Tables.MEMBERS);
+                memberViewFilterList.setDbms(dbConnection.getDbms());
+                memberViewFilterList.setTable(optMemberTable.get());
 
                 TableView<Membership> memberTable = optMemberTable.get().createTableView();
                 memberTable.setItems(FXCollections.observableArrayList(dbConnection.getTableContent(Tables.MEMBERS)));
