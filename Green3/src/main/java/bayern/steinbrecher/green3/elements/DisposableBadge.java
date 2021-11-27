@@ -1,9 +1,13 @@
 package bayern.steinbrecher.green3.elements;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.control.Control;
 import javafx.scene.control.Skin;
 
@@ -14,6 +18,7 @@ import javafx.scene.control.Skin;
 public class DisposableBadge extends Control {
     private final StringProperty text = new SimpleStringProperty();
     private final BooleanProperty disposable = new SimpleBooleanProperty();
+    private final ObjectProperty<EventHandler<ActionEvent>> onClose = new SimpleObjectProperty<>();
 
     public DisposableBadge() {
         this("");
@@ -56,5 +61,17 @@ public class DisposableBadge extends Control {
 
     public void setDisposable(boolean disposable) {
         disposableProperty().set(disposable);
+    }
+
+    public ObjectProperty<EventHandler<ActionEvent>> onCloseProperty() {
+        return onClose;
+    }
+
+    public EventHandler<ActionEvent> getOnClose() {
+        return onCloseProperty().get();
+    }
+
+    public void setOnClose(EventHandler<ActionEvent> onClose) {
+        onCloseProperty().set(onClose);
     }
 }

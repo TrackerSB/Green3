@@ -22,6 +22,8 @@ public class DisposableBadgeSkin extends SkinBase<DisposableBadge> {
         Button closeButton = new Button("X");
         closeButton.disableProperty()
                 .bind(control.disposableProperty().not());
+        closeButton.onActionProperty()
+                .bind(control.onCloseProperty());
 
         getChildren()
                 .add(new HBox(content, closeButton));

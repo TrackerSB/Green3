@@ -99,6 +99,11 @@ public class TableFilterListSkin extends SkinBase<TableFilterList> {
                                         = new DisposableBadge(addedCondition.getSqlExpression(), true);
                                 activeFilterContainer.getChildren()
                                         .add(conditionBadge);
+                                conditionBadge.setOnClose(aevt -> {
+                                    control.getActiveFilters().remove(addedCondition);
+                                    activeFilterContainer.getChildren()
+                                            .remove(conditionBadge);
+                                });
                             }
                         }
                     }
