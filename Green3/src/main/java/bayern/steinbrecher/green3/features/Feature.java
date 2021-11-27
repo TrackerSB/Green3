@@ -11,18 +11,12 @@ import java.util.ResourceBundle;
 public abstract class Feature {
     protected static final ResourceBundle resources
             = ResourceBundle.getBundle("bayern.steinbrecher.green3.features.Features");
-    private final String id;
     private final FeatureDescription description;
     private boolean enabled;
 
-    protected Feature(@NonNull String id, @NonNull FeatureDescription description, boolean enabled) {
-        this.id = id;
+    protected Feature(@NonNull FeatureDescription description, boolean enabled) {
         this.description = description;
         this.enabled = enabled;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public FeatureDescription getDescription() {

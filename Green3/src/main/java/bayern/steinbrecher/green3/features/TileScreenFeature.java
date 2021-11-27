@@ -12,9 +12,9 @@ import java.util.function.Consumer;
 public abstract class TileScreenFeature extends Feature {
     private final Consumer<ScreenManager> action;
 
-    protected TileScreenFeature(@NonNull String id, @NonNull FeatureDescription description, boolean enabled,
+    protected TileScreenFeature(@NonNull FeatureDescription description, boolean enabled,
                                 @NonNull Consumer<ScreenManager> action) {
-        super(id, description, enabled);
+        super(description, enabled);
         this.action = action;
     }
 

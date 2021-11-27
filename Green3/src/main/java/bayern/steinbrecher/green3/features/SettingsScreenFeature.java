@@ -17,27 +17,29 @@ import java.util.logging.Logger;
  */
 public class SettingsScreenFeature extends TileScreenFeature {
     private static final Logger LOGGER = Logger.getLogger(WelcomeScreenFeature.class.getName());
+    public static final SettingsScreenFeature BACK = new SettingsScreenFeature(
+            new FeatureDescription(
+                    resources.getString("back"),
+                    SettingsScreen.class.getResource("back.png"), true),
+            true, ScreenManager::switchBack);
+    public static final SettingsScreenFeature PROFILES = new SettingsScreenFeature(
+            new FeatureDescription(
+                    resources.getString("profiles"),
+                    SettingsScreen.class.getResource("gear.png"), true),
+            true, sm -> {
+        try {
+            sm.switchTo(new ProfileSettingsScreen());
+        } catch (ScreenSwitchFailedException ex) {
+            LOGGER.log(Level.SEVERE, "Could not show screen of profile settings", ex);
+        }
+    });
     static Iterable<SettingsScreenFeature> FEATURES = List.of(
-            new SettingsScreenFeature("SettingsBack",
-                    new FeatureDescription(
-                            resources.getString("back"),
-                            SettingsScreen.class.getResource("back.png"), true),
-                    true, ScreenManager::switchBack),
-            new SettingsScreenFeature("SettingsProfiles",
-                    new FeatureDescription(
-                            resources.getString("profiles"),
-                            SettingsScreen.class.getResource("gear.png"), true),
-                    true, sm -> {
-                try {
-                    sm.switchTo(new ProfileSettingsScreen());
-                } catch (ScreenSwitchFailedException ex) {
-                    LOGGER.log(Level.SEVERE, "Could not show screen of profile settings", ex);
-                }
-            })
+            BACK,
+            PROFILES
     );
 
-    private SettingsScreenFeature(@NonNull String id, @NonNull FeatureDescription description,
-                                  boolean enabled, @NonNull Consumer<ScreenManager> action) {
-        super(id, description, enabled, action);
+    private SettingsScreenFeature(@NonNull FeatureDescription description, boolean enabled,
+                                  @NonNull Consumer<ScreenManager> action) {
+        super(description, enabled, action);
     }
 }

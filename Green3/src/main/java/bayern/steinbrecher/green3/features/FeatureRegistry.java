@@ -22,13 +22,11 @@ public final class FeatureRegistry {
         throw new UnsupportedOperationException("The creation of instances is prohibited");
     }
 
-    public static void add(@NonNull Feature feature) {
-        assert registeredFeatures.stream().noneMatch(f -> f.getId().equalsIgnoreCase(feature.getId()))
-                : String.format("Feature with id \"%s\" already registered", feature.getId());
+    static void add(@NonNull Feature feature) {
         registeredFeatures.add(feature);
     }
 
-    public static void addAll(@NonNull Iterable<? extends Feature> featureSet) {
+    static void addAll(@NonNull Iterable<? extends Feature> featureSet) {
         featureSet.forEach(FeatureRegistry::add);
     }
 
