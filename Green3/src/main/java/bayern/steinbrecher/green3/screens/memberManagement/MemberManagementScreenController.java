@@ -15,6 +15,7 @@ import bayern.steinbrecher.green3.features.MemberManagementScreenFeature;
 import bayern.steinbrecher.screenswitcher.ScreenController;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.Pane;
@@ -41,7 +42,7 @@ public class MemberManagementScreenController extends ScreenController {
     @FXML
     private Pane memberViewPlaceholder;
     @FXML
-    private TableFilterList memberViewFilterList;
+    private TableFilterList<Membership> memberViewFilterList;
     @FXML
     private ResourceBundle resources;
 
@@ -78,11 +79,14 @@ public class MemberManagementScreenController extends ScreenController {
             Optional<DBConnection.Table<Set<Membership>, Membership>> optMemberTable
                     = dbConnection.getTable(Tables.MEMBERS);
             if (optMemberTable.isPresent()) {
-                memberViewFilterList.setDbms(dbConnection.getDbms());
                 memberViewFilterList.setTable(optMemberTable.get());
 
                 TableView<Membership> memberTable = optMemberTable.get().createTableView();
-                memberTable.setItems(FXCollections.observableArrayList(dbConnection.getTableContent(Tables.MEMBERS)));
+                var filterableItems = new FilteredList<>(
+                        FXCollections.observableArrayList(dbConnection.getTableContent(Tables.MEMBERS)));
+                filterableItems.predicateProperty()
+                        .bind(memberViewFilterList.filterProperty());
+                memberTable.setItems(filterableItems);
                 VBox.setVgrow(memberTable, Priority.ALWAYS);
 
                 Platform.runLater(() -> memberViewPlaceholder.getChildren().addAll(memberTable));

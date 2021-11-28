@@ -4,11 +4,11 @@ import bayern.steinbrecher.checkedElements.CheckableControlBase;
 import bayern.steinbrecher.checkedElements.report.ReportEntry;
 import bayern.steinbrecher.checkedElements.report.Reportable;
 import bayern.steinbrecher.dbConnector.DBConnection;
-import bayern.steinbrecher.dbConnector.query.QueryCondition;
-import bayern.steinbrecher.dbConnector.query.SupportedDBMS;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
@@ -18,17 +18,21 @@ import javafx.scene.control.Control;
 import javafx.scene.control.Skin;
 import lombok.NonNull;
 
+import java.util.function.Predicate;
+
 /**
+ * @param <I> The type of the elements represented by the table to filter.
  * @author Stefan Huber
  * @since 3u00
  */
-public class TableFilterList extends Control implements Reportable {
-    private final CheckableControlBase<TableFilterList> ccBase = new CheckableControlBase<>(this);
-    private final ListProperty<QueryCondition<?>> activeFilters
+public class TableFilterList<I> extends Control implements Reportable {
+    private final CheckableControlBase<TableFilterList<?>> ccBase = new CheckableControlBase<>(this);
+    private final ListProperty<Filter<I>> activeFilters
             = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private final ReadOnlyObjectWrapper<Predicate<I>> filter
+            = new ReadOnlyObjectWrapper<>(null);
     private final ReadOnlyBooleanProperty noActiveFilters = activeFilters.emptyProperty();
-    private final ObjectProperty<DBConnection.Table<?, ?>> table = new SimpleObjectProperty<>(null);
-    private final ObjectProperty<SupportedDBMS> dbms = new SimpleObjectProperty<>(SupportedDBMS.MY_SQL);
+    private final ObjectProperty<DBConnection.Table<?, I>> table = new SimpleObjectProperty<>(null);
 
     public TableFilterList() {
         getStyleClass()
@@ -36,20 +40,36 @@ public class TableFilterList extends Control implements Reportable {
 
         tableProperty()
                 .addListener((obs, previousScheme, currentScheme) -> activeFiltersProperty().clear());
-        dbmsProperty()
-                .addListener((obs, previousDbms, currentDbms) -> activeFiltersProperty().clear());
+        activeFiltersProperty()
+                .addListener((obs, previouslyActiveFilters, currentActiveFilters) -> {
+                    filter.set(
+                            activeFiltersProperty()
+                                    .stream()
+                                    .map(Filter::predicate)
+                                    .reduce(Predicate::and)
+                                    .orElse(null)
+                    );
+                });
     }
 
-    public ListProperty<QueryCondition<?>> activeFiltersProperty() {
+    public ListProperty<Filter<I>> activeFiltersProperty() {
         return activeFilters;
     }
 
-    public ObservableList<QueryCondition<?>> getActiveFilters() {
+    public ObservableList<Filter<I>> getActiveFilters() {
         return activeFiltersProperty().get();
     }
 
-    public void setActiveFilters(@NonNull ObservableList<QueryCondition<?>> activeFilters) {
+    public void setActiveFilters(@NonNull ObservableList<Filter<I>> activeFilters) {
         activeFiltersProperty().set(activeFilters);
+    }
+
+    public ReadOnlyObjectProperty<? extends Predicate<I>> filterProperty() {
+        return filter.getReadOnlyProperty();
+    }
+
+    public Predicate<I> getFilter() {
+        return filterProperty().get();
     }
 
     public ReadOnlyBooleanProperty noActiveFiltersProperty() {
@@ -60,7 +80,7 @@ public class TableFilterList extends Control implements Reportable {
         return noActiveFiltersProperty().get();
     }
 
-    public ObjectProperty<DBConnection.Table<?, ?>> tableProperty() {
+    public ObjectProperty<DBConnection.Table<?, I>> tableProperty() {
         return table;
     }
 
@@ -68,25 +88,13 @@ public class TableFilterList extends Control implements Reportable {
         return tableProperty().get();
     }
 
-    public void setTable(@NonNull DBConnection.Table<?, ?> table) {
+    public void setTable(@NonNull DBConnection.Table<?, I> table) {
         tableProperty().set(table);
     }
 
-    public ObjectProperty<SupportedDBMS> dbmsProperty() {
-        return dbms;
-    }
-
-    public SupportedDBMS getDbms() {
-        return dbmsProperty().get();
-    }
-
-    public void setDbms(@NonNull SupportedDBMS dbms) {
-        dbmsProperty().set(dbms);
-    }
-
     @Override
-    protected Skin<TableFilterList> createDefaultSkin() {
-        return new TableFilterListSkin(this);
+    protected Skin<TableFilterList<I>> createDefaultSkin() {
+        return new TableFilterListSkin<>(this);
     }
 
     @Override
@@ -107,5 +115,11 @@ public class TableFilterList extends Control implements Reportable {
     @Override
     public boolean addReport(ReportEntry report) {
         return ccBase.addReport(report);
+    }
+
+    public static record Filter<I>(
+            Predicate<I> predicate,
+            String description
+    ) {
     }
 }
