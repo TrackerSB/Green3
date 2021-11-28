@@ -6,9 +6,10 @@ import bayern.steinbrecher.dbConnector.DBConnection;
 import bayern.steinbrecher.dbConnector.query.QueryFailedException;
 import bayern.steinbrecher.dbConnector.query.QueryOperator;
 import bayern.steinbrecher.dbConnector.scheme.ColumnPattern;
+import javafx.beans.InvalidationListener;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ListProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -52,8 +53,12 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             QueryOperator.CONTAINS, ControlResources.RESOURCES.getString("contains").toLowerCase(Locale.ROOT),
             QueryOperator.LIKE, ControlResources.RESOURCES.getString("sameAs").toLowerCase(Locale.ROOT)
     );
+    private final Map<TableFilterList.Filter<I>, DisposableBadge> visibleBadges = new HashMap<>();
     private final BooleanProperty valueValid = new SimpleBooleanProperty(false);
     private final ObjectProperty<Object> value = new SimpleObjectProperty<>(null);
+    private final BooleanBinding unconfirmedFilterValid;
+    private final ObjectProperty<Optional<TableFilterList.Filter<I>>> unconfirmedFilter
+            = new SimpleObjectProperty<>(Optional.empty());
 
     public TableFilterListSkin(@NonNull TableFilterList<I> control) {
         super(control);
@@ -69,7 +74,32 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         Node valueContainer = createValueContainer(columnSelection);
         HBox.setHgrow(valueContainer, Priority.ALWAYS);
 
-        Node addFilter = createAddFilterButton(columnSelection, operatorSelection, control.activeFiltersProperty());
+        unconfirmedFilterValid = columnSelection.validProperty()
+                .and(operatorSelection.validProperty())
+                .and(valueValid);
+        setupFilterPreview(columnSelection, operatorSelection);
+        unconfirmedFilter.addListener((obs, previousUnconfirmedFilter, currentUnconfirmedFilter) -> {
+            if (previousUnconfirmedFilter.isPresent()
+                    && visibleBadges.containsKey(previousUnconfirmedFilter.get())
+                    && !visibleBadges.get(previousUnconfirmedFilter.get()).isDisposable()) {
+                // Remove the previous unconfirmed filter only if it was not confirmed
+                control.activeFiltersProperty()
+                        .remove(previousUnconfirmedFilter.get());
+            }
+
+            if (currentUnconfirmedFilter.isEmpty()) {
+                columnSelection.getSelectionModel()
+                        .clearSelection();
+            }
+
+            // Add a filter to the elements' property if the current user input provides a filter
+            if (unconfirmedFilterValid.get()) {
+                control.activeFiltersProperty()
+                        .add(currentUnconfirmedFilter.orElseThrow());
+            }
+        });
+
+        Node addFilter = createAddFilterButton();
 
         getChildren()
                 .add(new HBox(filterDescription, activeFilterContainer, addFilter, columnSelection, operatorSelection,
@@ -96,19 +126,19 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                 .addListener(noActiveFiltersListener);
         noActiveFiltersListener.changed(null, null, control.isNoActiveFilters());
 
-        Map<TableFilterList.Filter<I>, DisposableBadge> visibleBadges = new HashMap<>();
-
         control.activeFiltersProperty()
                 .addListener((ListChangeListener<? super TableFilterList.Filter<I>>) change -> {
                     while (change.next()) {
                         if (change.wasAdded()) {
                             for (TableFilterList.Filter<I> addedCondition : change.getAddedSubList()) {
-                                DisposableBadge conditionBadge
-                                        = new DisposableBadge(addedCondition.description(), true);
+                                boolean addedUnconfirmedFilter = unconfirmedFilterValid.get()
+                                        && addedCondition.equals(unconfirmedFilter.get().get());
+                                var conditionBadge = new DisposableBadge(
+                                        addedCondition.description(), !addedUnconfirmedFilter);
+                                conditionBadge.setOnClose(aevt -> control.getActiveFilters().remove(addedCondition));
                                 visibleBadges.put(addedCondition, conditionBadge);
                                 activeFilterContainer.getChildren()
                                         .add(conditionBadge);
-                                conditionBadge.setOnClose(aevt -> control.getActiveFilters().remove(addedCondition));
                             }
                         }
 
@@ -121,6 +151,12 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                                 } else {
                                     activeFilterContainer.getChildren()
                                             .remove(removedBadge);
+                                    boolean removedUnconfirmedFilter = unconfirmedFilterValid.get()
+                                            && removedCondition.equals(unconfirmedFilter.get().get())
+                                            && !visibleBadges.get(unconfirmedFilter.get().get()).isDisposable();
+                                    if (removedUnconfirmedFilter) {
+                                        unconfirmedFilter.set(Optional.empty());
+                                    }
                                 }
                             }
                         }
@@ -257,28 +293,11 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         return valueContainer;
     }
 
-    @NonNull
-    private Node createAddFilterButton(@NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection,
-                                       @NonNull CheckedComboBox<QueryOperator<?>> operatorSelection,
-                                       @NonNull ListProperty<TableFilterList.Filter<I>> activeFiltersProperty) {
-        Button addFilter = new Button();
-
-        URL graphicsResource = TableFilterListSkin.class.getResource("add.png");
-        if (graphicsResource == null) {
-            LOGGER.log(Level.WARNING, "Could not find icon for add button");
-            addFilter.setText("+");
-        } else {
-            addFilter.setGraphic(new ImageView(graphicsResource.toExternalForm()));
-        }
-
-        BooleanBinding currentFilterValid = columnSelection.validProperty()
-                .and(operatorSelection.validProperty())
-                .and(valueValid);
-        addFilter.disableProperty()
-                .bind(currentFilterValid.not());
-
-        addFilter.setOnAction(aevt -> {
-            if (currentFilterValid.get()) {
+    private void setupFilterPreview(@NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection,
+                                    @NonNull CheckedComboBox<QueryOperator<?>> operatorSelection) {
+        InvalidationListener filterPreviewChangedListener = obs -> {
+            TableFilterList.Filter<I> newFilter = null;
+            if (unconfirmedFilterValid.get()) {
                 DBConnection.Column<I, ?> selectedColumn = columnSelection.getSelectionModel().getSelectedItem();
                 String columnName = selectedColumn.getName();
                 Optional<? extends ColumnPattern<?, I>> columnPattern = selectedColumn.getPattern();
@@ -335,13 +354,47 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                         }).get();
                         String description = String.format("%s %s %s", columnName,
                                 operatorRepresentation, valueRepresentation);
-                        activeFiltersProperty.add(new TableFilterList.Filter<>(operator::apply, description));
+                        newFilter = new TableFilterList.Filter<>(operator::apply, description);
                     }
                 } else {
                     LOGGER.log(Level.WARNING,
                             String.format("Cannot create filter for column %s since it is not supported by the scheme",
                                     columnName));
                 }
+            }
+            unconfirmedFilter.set(Optional.ofNullable(newFilter));
+        };
+
+        unconfirmedFilterValid.addListener(filterPreviewChangedListener);
+        columnSelection.getSelectionModel().selectedItemProperty().addListener(filterPreviewChangedListener);
+        operatorSelection.getSelectionModel().selectedItemProperty().addListener(filterPreviewChangedListener);
+        value.addListener(filterPreviewChangedListener);
+    }
+
+    @NonNull
+    private Node createAddFilterButton() {
+        Button addFilter = new Button();
+
+        URL graphicsResource = TableFilterListSkin.class.getResource("add.png");
+        if (graphicsResource == null) {
+            LOGGER.log(Level.WARNING, "Could not find icon for add button");
+            addFilter.setText("+");
+        } else {
+            addFilter.setGraphic(new ImageView(graphicsResource.toExternalForm()));
+        }
+
+        BooleanBinding isNewFilterPresent = Bindings.createBooleanBinding(
+                () -> unconfirmedFilter.get() != null && unconfirmedFilter.get().isPresent(),
+                unconfirmedFilter);
+
+        addFilter.disableProperty()
+                .bind(isNewFilterPresent.not());
+
+        addFilter.setOnAction(aevt -> {
+            if (isNewFilterPresent.get()) {
+                TableFilterList.Filter<I> filterToBeConfirmed = unconfirmedFilter.get().orElseThrow();
+                visibleBadges.get(filterToBeConfirmed).setDisposable(true);
+                unconfirmedFilter.set(Optional.empty());
             }
         });
 
