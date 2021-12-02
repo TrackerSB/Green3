@@ -67,6 +67,7 @@ public class ProfileSettingsScreenController extends ScreenController {
                                 = featureSubTrees.put(currentFeatureClass, newFeatureLevel);
                         assert removedItem == null : "Replaced already existing entry for feature class";
 
+                        //noinspection unchecked
                         currentFeatureClass = (Class<? extends Feature>) currentFeatureClass.getSuperclass();
                         currentFeatureItem = newFeatureLevel;
                     }
@@ -77,6 +78,7 @@ public class ProfileSettingsScreenController extends ScreenController {
     }
 
     private static abstract class FeatureTreeItem {
+        @NonNull
         public abstract String getDescription();
 
         protected abstract URL getImageURL();
@@ -88,10 +90,12 @@ public class ProfileSettingsScreenController extends ScreenController {
             return new ImageView(new Image(getImageURL().toExternalForm(), 30d, 30d, true, true));
         }
 
+        @NonNull
         public abstract Optional<Boolean> isEnabled();
 
         public abstract boolean isMandatory();
 
+        @NonNull
         public final TreeItem<FeatureTreeItem> generateTreeItem() {
             TreeItem<FeatureTreeItem> item = new TreeItem<>(this);
             item.setExpanded(true);
@@ -113,6 +117,7 @@ public class ProfileSettingsScreenController extends ScreenController {
         }
 
         @Override
+        @NonNull
         public String getDescription() {
             try {
                 Method getFeatureSetDescription = getFeatureType().getMethod("getFeatureSetDescription");
@@ -135,6 +140,7 @@ public class ProfileSettingsScreenController extends ScreenController {
         }
 
         @Override
+        @NonNull
         public Optional<Boolean> isEnabled() {
             Collection<? extends Feature> subFeatures = FeatureRegistry.findSub(getFeatureType());
             Boolean enabledState;
@@ -173,6 +179,7 @@ public class ProfileSettingsScreenController extends ScreenController {
         }
 
         @Override
+        @NonNull
         public String getDescription() {
             return getFeature()
                     .getDescription()
@@ -187,6 +194,7 @@ public class ProfileSettingsScreenController extends ScreenController {
         }
 
         @Override
+        @NonNull
         public Optional<Boolean> isEnabled() {
             return Optional.of(getFeature().isEnabled());
         }
