@@ -9,6 +9,7 @@ since: 3u00
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
 <StackPane xmlns="http://javafx.com/javafx"
            xmlns:fx="http://javafx.com/fxml"
            fx:controller="bayern.steinbrecher.green3.screens.memberManagement.MemberManagementScreenController"
@@ -21,9 +22,15 @@ since: 3u00
         <center>
             <VBox>
                 <TableFilterList fx:id="memberViewFilterList"/>
+                <Text fx:id="filterStatus"/>
                 <HBox fx:id="memberViewPlaceholder"
                       VBox.vgrow="ALWAYS"/>
             </VBox>
         </center>
+        <bottom>
+            <Button fx:id="exportMembers"
+                    onAction="#exportMembers"
+                    text="%export"/>
+        </bottom>
     </BorderPane>
 </StackPane>
