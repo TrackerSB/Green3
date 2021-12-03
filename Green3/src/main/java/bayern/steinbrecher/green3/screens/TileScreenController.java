@@ -1,7 +1,7 @@
 package bayern.steinbrecher.green3.screens;
 
 import bayern.steinbrecher.green3.elements.ImageButton;
-import bayern.steinbrecher.green3.features.FeatureRegistry;
+import bayern.steinbrecher.green3.features.Feature;
 import bayern.steinbrecher.green3.features.TileScreenFeature;
 import bayern.steinbrecher.screenswitcher.ScreenController;
 import javafx.fxml.FXML;
@@ -19,8 +19,8 @@ public class TileScreenController extends ScreenController {
     @NonNull
     private ImageButton generateMenuEntry(@NonNull TileScreenFeature feature) {
         ImageButton menuEntry = new ImageButton();
-        menuEntry.setText(feature.getDescription().name());
-        menuEntry.setImageUrl(feature.getDescription().image().toExternalForm());
+        menuEntry.setText(feature.getDescription().getName());
+        menuEntry.setImageUrl(feature.getImageURL().toExternalForm());
         menuEntry.setOnAction(mevt -> feature.getAction().accept(getScreenManager()));
         return menuEntry;
     }
@@ -30,9 +30,12 @@ public class TileScreenController extends ScreenController {
      * FIXME Avoid calling this method manually by providing the {@code featureSet} parameter to the controller
      * directly.
      */
-    void populateWithTiles(@NonNull Class<? extends TileScreenFeature> featureSet) {
-        FeatureRegistry.find(featureSet)
+    void populateWithTiles(@NonNull Feature rootFeature) {
+        rootFeature.getDescription()
+                .subFeatures()
                 .stream()
+                .filter(f -> f instanceof TileScreenFeature)
+                .map(f -> (TileScreenFeature) f)
                 .map(this::generateMenuEntry)
                 .forEach(entry -> menu.getChildren().add(entry));
     }

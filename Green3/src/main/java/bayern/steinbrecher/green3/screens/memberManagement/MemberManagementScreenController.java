@@ -11,7 +11,7 @@ import bayern.steinbrecher.dbConnector.query.SupportedDBMS;
 import bayern.steinbrecher.green3.data.Membership;
 import bayern.steinbrecher.green3.data.Tables;
 import bayern.steinbrecher.green3.elements.TableFilterList;
-import bayern.steinbrecher.green3.features.MemberManagementScreenFeature;
+import bayern.steinbrecher.green3.features.FeatureRegistry;
 import bayern.steinbrecher.screenswitcher.ScreenController;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -48,7 +48,7 @@ public class MemberManagementScreenController extends ScreenController {
 
     @FXML
     private void initialize() {
-        memberViewFilterList.setVisible(MemberManagementScreenFeature.TABLE_FILTERS.isEnabled());
+        memberViewFilterList.setVisible(FeatureRegistry.MEMBER_MANAGEMENT_TABLE_FILTERS.isEnabled().orElse(false));
     }
 
     @NonNull

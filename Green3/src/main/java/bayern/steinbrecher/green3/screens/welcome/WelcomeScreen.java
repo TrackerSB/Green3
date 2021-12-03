@@ -1,6 +1,6 @@
 package bayern.steinbrecher.green3.screens.welcome;
 
-import bayern.steinbrecher.green3.features.WelcomeScreenFeature;
+import bayern.steinbrecher.green3.features.FeatureRegistry;
 import bayern.steinbrecher.green3.screens.TileScreen;
 
 import java.util.ResourceBundle;
@@ -12,6 +12,6 @@ import java.util.ResourceBundle;
 public class WelcomeScreen extends TileScreen {
     public WelcomeScreen() {
         super(ResourceBundle.getBundle("bayern.steinbrecher.green3.screens.welcome.WelcomeScreen"),
-                WelcomeScreenFeature.class);
+                FeatureRegistry.WELCOME_SCREEN);
     }
 }
