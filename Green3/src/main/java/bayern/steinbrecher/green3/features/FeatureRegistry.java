@@ -22,13 +22,17 @@ public final class FeatureRegistry {
     private static final Logger LOGGER = Logger.getLogger(FeatureRegistry.class.getName());
 
     // Member management screen
+    public static final MemberManagementScreenFeature MEMBER_MANAGEMENT_EXPORT
+            = new MemberManagementScreenFeature(
+            new FeatureDescription("export", "export.png", false, List.of()),
+            true);
     public static final MemberManagementScreenFeature MEMBER_MANAGEMENT_TABLE_FILTERS
             = new MemberManagementScreenFeature(
             new FeatureDescription("tableFilter", "add.png", false, List.of()),
-            true
-    );
+            true);
     public static final Feature MEMBER_MANAGEMENT_SCREEN = new Feature(
             new FeatureDescription("memberManagementScreen", null, true, List.of(
+                    MEMBER_MANAGEMENT_EXPORT,
                     MEMBER_MANAGEMENT_TABLE_FILTERS
             )), true) {
         @Override

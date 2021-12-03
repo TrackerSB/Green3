@@ -117,7 +117,7 @@ public class TableFilterList<I> extends Control implements Reportable {
         return ccBase.addReport(report);
     }
 
-    public static record Filter<I>(
+    public record Filter<I>(
             Predicate<I> predicate,
             String description
     ) {

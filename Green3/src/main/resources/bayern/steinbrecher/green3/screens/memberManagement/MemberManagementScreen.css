@@ -2,3 +2,7 @@
 author: Stefan Huber
 since: 3u00
  */
+
+#exportMembers {
+    -fx-graphic: url("export.png");
+}
