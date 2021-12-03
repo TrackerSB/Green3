@@ -50,6 +50,8 @@ public class MemberManagementScreenController extends ScreenController {
     private void initialize() {
         memberViewFilterList.visibleProperty()
                 .bind(FeatureRegistry.MEMBER_MANAGEMENT_TABLE_FILTERS.enabledProperty());
+        memberViewFilterList.managedProperty()
+                .bind(memberViewFilterList.visibleProperty());
     }
 
     @NonNull
