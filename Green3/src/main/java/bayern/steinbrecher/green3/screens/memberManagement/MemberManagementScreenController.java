@@ -48,7 +48,8 @@ public class MemberManagementScreenController extends ScreenController {
 
     @FXML
     private void initialize() {
-        memberViewFilterList.setVisible(FeatureRegistry.MEMBER_MANAGEMENT_TABLE_FILTERS.isEnabled());
+        memberViewFilterList.visibleProperty()
+                .bind(FeatureRegistry.MEMBER_MANAGEMENT_TABLE_FILTERS.enabledProperty());
     }
 
     @NonNull
