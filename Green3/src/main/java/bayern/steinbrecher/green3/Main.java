@@ -1,5 +1,6 @@
 package bayern.steinbrecher.green3;
 
+import bayern.steinbrecher.green3.data.Profile;
 import bayern.steinbrecher.green3.screens.welcome.WelcomeScreen;
 import bayern.steinbrecher.screenswitcher.ScreenManager;
 import bayern.steinbrecher.screenswitcher.ScreenSwitchFailedException;
@@ -24,6 +25,8 @@ public final class Main extends Application {
 
     @Override
     public void start(@NonNull Stage primaryStage) throws ScreenSwitchFailedException {
+        Profile.loadProfile("myNiceProfile");
+
         ScreenManager screenManager = new ScreenManager(primaryStage);
         screenManager.switchTo(new WelcomeScreen());
 
@@ -34,5 +37,11 @@ public final class Main extends Application {
                 .add(APPLICATION_ICON);
         primaryStage.setMaximized(true);
         primaryStage.show();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        Profile.storeProfile();
     }
 }

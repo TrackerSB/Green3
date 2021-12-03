@@ -16,7 +16,9 @@ public record FeatureDescription(
         @NonNull String nameKey,
         String imageFileName,
         boolean mandatory,
-        @NonNull Collection<Feature> subFeatures) { // FIXME How to force sub features are subtypes of parent feature?
+        // FIXME How to force sub features are subtypes of parent feature?
+        // FIXME How to force that there are no two sub features that have the same name key?
+        @NonNull Collection<Feature> subFeatures) {
     private static final Logger LOGGER = Logger.getLogger(FeatureDescription.class.getName());
     private static final ResourceBundle resources
             = ResourceBundle.getBundle("bayern.steinbrecher.green3.features.Features");

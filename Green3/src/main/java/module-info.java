@@ -7,6 +7,7 @@ module bayern.steinbrecher.Green3 {
     requires java.compiler;
     requires java.desktop;
     requires java.logging;
+    requires java.prefs;
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.graphics;

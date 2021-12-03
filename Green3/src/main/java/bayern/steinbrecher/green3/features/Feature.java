@@ -5,6 +5,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import lombok.NonNull;
 
 import java.net.URL;
+import java.util.Optional;
 
 /**
  * @author Stefan Huber
@@ -34,6 +35,18 @@ public abstract class Feature {
     protected Feature(@NonNull FeatureDescription description, boolean enabled) {
         this.description = description;
         setEnabled(enabled);
+    }
+
+    /**
+     * Search for a direct sub feature having the given name key. It does NOT recursively search through all levels of
+     * sub features.
+     */
+    public Optional<Feature> findSubFeature(@NonNull String nameKey) {
+        return getDescription()
+                .subFeatures()
+                .stream()
+                .filter(f -> f.getDescription().nameKey().equals(nameKey))
+                .findAny();
     }
 
     public FeatureDescription getDescription() {
