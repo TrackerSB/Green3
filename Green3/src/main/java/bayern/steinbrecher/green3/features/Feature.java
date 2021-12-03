@@ -1,9 +1,10 @@
 package bayern.steinbrecher.green3.features;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import lombok.NonNull;
 
 import java.net.URL;
-import java.util.Optional;
 
 /**
  * @author Stefan Huber
@@ -11,11 +12,28 @@ import java.util.Optional;
  */
 public abstract class Feature {
     private final FeatureDescription description;
-    private boolean enabled;
+    private final BooleanProperty enabled = new SimpleBooleanProperty(true) {
+        @Override
+        public boolean get() {
+            boolean anySubFeatureEnabled = getDescription()
+                    .subFeatures()
+                    .stream()
+                    .anyMatch(Feature::isEnabled);
+            return getDescription().mandatory() || super.get() || anySubFeatureEnabled;
+        }
+
+        @Override
+        public void set(boolean newValue) {
+            super.set(newValue);
+            getDescription()
+                    .subFeatures()
+                    .forEach(f -> f.setEnabled(newValue));
+        }
+    };
 
     protected Feature(@NonNull FeatureDescription description, boolean enabled) {
         this.description = description;
-        this.enabled = enabled;
+        setEnabled(enabled);
     }
 
     public FeatureDescription getDescription() {
@@ -34,33 +52,16 @@ public abstract class Feature {
                 .getResource(getDescription().imageFileName());
     }
 
-    public Optional<Boolean> isEnabled() {
-        if (getDescription().subFeatures().isEmpty()) {
-            return Optional.of(enabled);
-        }
-        boolean allSubFeaturesEnabled = getDescription()
-                .subFeatures()
-                .stream()
-                .map(Feature::isEnabled)
-                .allMatch(e -> e.orElse(false));
-        if (allSubFeaturesEnabled) {
-            return Optional.of(true);
-        }
-        boolean allSubFeaturesDisabled = getDescription()
-                .subFeatures()
-                .stream()
-                .map(Feature::isEnabled)
-                .noneMatch(e -> e.orElse(true));
-        if (allSubFeaturesDisabled) {
-            return Optional.of(false);
-        }
-        return Optional.empty();
+    @NonNull
+    public BooleanProperty enabledProperty() {
+        return enabled;
+    }
+
+    public boolean isEnabled() {
+        return enabledProperty().get();
     }
 
     public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-        getDescription()
-                .subFeatures()
-                .forEach(f -> f.setEnabled(enabled));
+        enabledProperty().set(enabled);
     }
 }

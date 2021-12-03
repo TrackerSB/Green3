@@ -35,10 +35,10 @@ public class ProfileSettingsScreenController extends ScreenController {
                         itemBox.setGraphic(new ImageView(
                                 new Image(imageURL.toExternalForm(), 30d, 30d, true, true)));
                     }
-                    boolean hasSubFeatures = !item.getDescription().subFeatures().isEmpty();
-                    itemBox.setAllowIndeterminate(hasSubFeatures);
-                    itemBox.setDisable(item.getDescription().mandatory() || hasSubFeatures);
-                    item.isEnabled().ifPresentOrElse(itemBox::setSelected, () -> itemBox.setIndeterminate(true));
+                    itemBox.setAllowIndeterminate(false);
+                    itemBox.setDisable(item.getDescription().mandatory());
+                    itemBox.selectedProperty()
+                            .bindBidirectional(item.enabledProperty());
                     setGraphic(itemBox);
                 }
             }
