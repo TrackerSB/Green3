@@ -108,8 +108,10 @@ public final class FeatureRegistry {
 
     // Root feature
     public static final Feature ROOT = new Feature(
-            new FeatureDescription("features", null, true, List.of(MEMBER_MANAGEMENT_SCREEN, SETTINGS_SCREEN)),
-            true) {
+            new FeatureDescription("features", null, true, List.of(
+                    MEMBER_MANAGEMENT_SCREEN,
+                    SETTINGS_SCREEN
+            )), true) {
         @Override
         protected @NonNull Class<?> getAssociatedClass() {
             return Feature.class;
