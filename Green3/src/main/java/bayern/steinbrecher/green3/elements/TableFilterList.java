@@ -43,8 +43,7 @@ public class TableFilterList<I> extends Control implements Reportable {
         activeFiltersProperty()
                 .addListener((obs, previouslyActiveFilters, currentActiveFilters) -> {
                     filter.set(
-                            activeFiltersProperty()
-                                    .stream()
+                            currentActiveFilters.stream()
                                     .map(Filter::predicate)
                                     .reduce(Predicate::and)
                                     .orElse(null)

@@ -6,15 +6,17 @@ import bayern.steinbrecher.dbConnector.DBConnection;
 import bayern.steinbrecher.dbConnector.query.QueryFailedException;
 import bayern.steinbrecher.dbConnector.query.QueryOperator;
 import bayern.steinbrecher.dbConnector.scheme.ColumnPattern;
-import javafx.beans.InvalidationListener;
-import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.MapProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleMapProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.MapChangeListener;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListCell;
@@ -29,11 +31,11 @@ import javafx.util.Callback;
 import lombok.NonNull;
 
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,12 +55,12 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             QueryOperator.CONTAINS, ControlResources.RESOURCES.getString("contains").toLowerCase(Locale.ROOT),
             QueryOperator.LIKE, ControlResources.RESOURCES.getString("sameAs").toLowerCase(Locale.ROOT)
     );
-    private final Map<TableFilterList.Filter<I>, DisposableBadge> visibleBadges = new HashMap<>();
+    private final MapProperty<TableFilterList.Filter<I>, DisposableBadge> visibleBadges
+            = new SimpleMapProperty<>(FXCollections.observableHashMap());
     private final BooleanProperty valueValid = new SimpleBooleanProperty(false);
     private final ObjectProperty<Object> value = new SimpleObjectProperty<>(null);
-    private final BooleanBinding unconfirmedFilterValid;
-    private final ObjectProperty<Optional<TableFilterList.Filter<I>>> unconfirmedFilter
-            = new SimpleObjectProperty<>(Optional.empty());
+    private final BooleanBinding currentFilterInputValid;
+    private final ObjectProperty<Optional<TableFilterList.Filter<I>>> currentFilterInput;
 
     public TableFilterListSkin(@NonNull TableFilterList<I> control) {
         super(control);
@@ -74,52 +76,56 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         Node valueContainer = createValueContainer(columnSelection);
         HBox.setHgrow(valueContainer, Priority.ALWAYS);
 
-        unconfirmedFilterValid = columnSelection.validProperty()
+        currentFilterInputValid = columnSelection.validProperty()
                 .and(operatorSelection.validProperty())
                 .and(valueValid);
-        setupFilterPreview(columnSelection, operatorSelection);
-        unconfirmedFilter.addListener((obs, previousUnconfirmedFilter, currentUnconfirmedFilter) -> {
-            if (previousUnconfirmedFilter.isPresent()
-                    && visibleBadges.containsKey(previousUnconfirmedFilter.get())
-                    && !visibleBadges.get(previousUnconfirmedFilter.get()).isDisposable()) {
-                // Remove the previous unconfirmed filter only if it was not confirmed
-                control.activeFiltersProperty()
-                        .remove(previousUnconfirmedFilter.get());
-            }
+        currentFilterInput = trackCurrentFilterInput(columnSelection, operatorSelection);
+        currentFilterInput.addListener((obs, previousUnconfirmedFilter, currentUnconfirmedFilter) -> {
+            previousUnconfirmedFilter.ifPresent(filter -> control.activeFiltersProperty().remove(filter));
 
-            if (currentUnconfirmedFilter.isEmpty()) {
-                columnSelection.getSelectionModel()
-                        .clearSelection();
-            }
-
-            // Add a filter to the elements' property if the current user input provides a filter
-            if (unconfirmedFilterValid.get()) {
-                control.activeFiltersProperty()
-                        .add(currentUnconfirmedFilter.orElseThrow());
+            if (currentUnconfirmedFilter.isPresent()) {
+                control.activeFiltersProperty().add(currentUnconfirmedFilter.get());
+            } else {
+                columnSelection.getSelectionModel().clearSelection();
             }
         });
 
-        Node addFilter = createAddFilterButton();
+        Node addFilter = createAddFilterButton(control);
 
         getChildren()
                 .add(new HBox(filterDescription, activeFilterContainer, addFilter, columnSelection, operatorSelection,
                         valueContainer));
     }
 
+    private void addBadge(TableFilterList.Filter<I> associatedFilter, @NonNull DisposableBadge badge) {
+        if (visibleBadges.containsKey(associatedFilter)) {
+            LOGGER.log(Level.INFO, "The badge for the given filter gets replaced");
+        } else if (visibleBadges.containsValue(badge)) {
+            LOGGER.log(Level.WARNING, "The given badge is already associated to a filter criterion");
+        }
+
+        // Do not add a badge for the unconfirmed filter
+        if (currentFilterInput == null
+                || currentFilterInput.get().isEmpty()
+                || currentFilterInput.get().get() != associatedFilter) {
+            visibleBadges.put(associatedFilter, badge);
+        }
+    }
+
+    private void removeBadge(TableFilterList.Filter<I> associatedFilter) {
+        DisposableBadge removedBadge = visibleBadges.remove(associatedFilter);
+        if (removedBadge == null) {
+            LOGGER.log(Level.WARNING, "Cannot remove badge for filter which was not associated");
+        }
+    }
+
     @NonNull
     private Pane createActiveFilterContainer(@NonNull TableFilterList<I> control) {
-        DisposableBadge noFilterBadge = new DisposableBadge(ControlResources.RESOURCES.getString("none"), false);
-        HBox activeFilterContainer = new HBox();
-
         ChangeListener<Boolean> noActiveFiltersListener = (obs, wereNoFilters, areNoFilters) -> {
             if (areNoFilters) {
-                if (!activeFilterContainer.getChildren().contains(noFilterBadge)) {
-                    activeFilterContainer.getChildren()
-                            .add(noFilterBadge);
-                }
+                addBadge(null, new DisposableBadge(ControlResources.RESOURCES.getString("none"), false));
             } else {
-                activeFilterContainer.getChildren()
-                        .remove(noFilterBadge);
+                removeBadge(null);
             }
         };
         control.noActiveFiltersProperty()
@@ -131,35 +137,30 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                     while (change.next()) {
                         if (change.wasAdded()) {
                             for (TableFilterList.Filter<I> addedCondition : change.getAddedSubList()) {
-                                boolean addedUnconfirmedFilter = unconfirmedFilterValid.get()
-                                        && addedCondition.equals(unconfirmedFilter.get().get());
-                                var conditionBadge = new DisposableBadge(
-                                        addedCondition.description(), !addedUnconfirmedFilter);
+                                var conditionBadge = new DisposableBadge(addedCondition.description(), true);
                                 conditionBadge.setOnClose(aevt -> control.getActiveFilters().remove(addedCondition));
-                                visibleBadges.put(addedCondition, conditionBadge);
-                                activeFilterContainer.getChildren()
-                                        .add(conditionBadge);
+                                addBadge(addedCondition, conditionBadge);
                             }
                         }
 
                         if (change.wasRemoved()) {
                             for (TableFilterList.Filter<I> removedCondition : change.getRemoved()) {
-                                DisposableBadge removedBadge = visibleBadges.remove(removedCondition);
-                                if (removedBadge == null) {
-                                    LOGGER.log(Level.WARNING, "Could not remove disposable badge since there is no "
-                                            + "badge associated with the predicate to remove");
-                                } else {
-                                    activeFilterContainer.getChildren()
-                                            .remove(removedBadge);
-                                    boolean removedUnconfirmedFilter = unconfirmedFilterValid.get()
-                                            && removedCondition.equals(unconfirmedFilter.get().get())
-                                            && !visibleBadges.get(unconfirmedFilter.get().get()).isDisposable();
-                                    if (removedUnconfirmedFilter) {
-                                        unconfirmedFilter.set(Optional.empty());
-                                    }
-                                }
+                                removeBadge(removedCondition);
                             }
                         }
+                    }
+                });
+
+        HBox activeFilterContainer = new HBox();
+        visibleBadges.addListener(
+                (MapChangeListener<? super TableFilterList.Filter<I>, ? super DisposableBadge>) change -> {
+                    if (change.wasRemoved()) {
+                        activeFilterContainer.getChildren()
+                                .remove(change.getValueRemoved());
+                    }
+                    if (change.wasAdded()) {
+                        activeFilterContainer.getChildren()
+                                .add(change.getValueAdded());
                     }
                 });
 
@@ -192,10 +193,12 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         columnSelection.setCellFactory(cellFactory);
 
         ChangeListener<DBConnection.Table<?, I>> tableListener = (obs, previousTable, currentTable) -> {
+            columnSelection.getSelectionModel().clearSelection();
             columnSelection.getItems().clear();
+
             if (currentTable != null) {
                 try {
-                    columnSelection.getItems().addAll(currentTable.getColumns());
+                    columnSelection.getItems().setAll(currentTable.getColumns());
                     columnSelection.getItems().sort((cA, cB) -> cA.getName().compareToIgnoreCase(cB.getName()));
                 } catch (QueryFailedException ex) {
                     LOGGER.log(Level.WARNING, "Could not populate column selection", ex);
@@ -225,6 +228,9 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             setText(PRETTY_OPERATOR_NAME.getOrDefault(item, item.getOperatorSymbol()));
+                        } else {
+                            LOGGER.log(Level.INFO, "Encountered empty or null item");
+                            setText("");
                         }
                     }
                 };
@@ -235,6 +241,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
         ChangeListener<DBConnection.Column<?, ?>> selectedItemChanged =
                 (obs, previouslySelected, currentlySelected) -> {
+                    operatorSelection.getSelectionModel().clearSelection();
                     operatorSelection.getItems().clear();
 
                     if (currentlySelected != null) {
@@ -245,8 +252,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                             operatorSelection.getItems().addAll(QueryOperator.STRING_OPERATORS);
                         } else {
                             LOGGER.log(Level.WARNING,
-                                    String.format("The type of the selected column %s is unsupported",
-                                            columnType.getName()));
+                                    String.format("The type %s of the selected column %s is unsupported",
+                                            columnType.getName(), currentlySelected.getName()));
                         }
                     }
                 };
@@ -269,6 +276,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                         if (Boolean.class.isAssignableFrom(columnType)) {
                             valueValid.unbind();
                             valueValid.set(true);
+                            value.unbind();
                             value.set(null);
                         } else if (String.class.isAssignableFrom(columnType)) {
                             var inputField = new CheckedTextField();
@@ -278,10 +286,11 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                             value.bind(inputField.textProperty());
                         } else {
                             LOGGER.log(Level.WARNING,
-                                    String.format("The type of the selected column %s is unsupported",
-                                            columnType.getName()));
+                                    String.format("The type %s of the selected column %s is unsupported",
+                                            columnType.getName(), currentlySelected.getName()));
                             valueValid.unbind();
                             valueValid.set(false);
+                            value.unbind();
                             value.set(null);
                         }
                     }
@@ -293,86 +302,99 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         return valueContainer;
     }
 
-    private void setupFilterPreview(@NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection,
-                                    @NonNull CheckedComboBox<QueryOperator<?>> operatorSelection) {
-        InvalidationListener filterPreviewChangedListener = obs -> {
-            TableFilterList.Filter<I> newFilter = null;
-            if (unconfirmedFilterValid.get()) {
-                DBConnection.Column<I, ?> selectedColumn = columnSelection.getSelectionModel().getSelectedItem();
-                String columnName = selectedColumn.getName();
-                Optional<? extends ColumnPattern<?, I>> columnPattern = selectedColumn.getPattern();
-                if (columnPattern.isPresent()) {
-                    QueryOperator<?> selectedOperator = operatorSelection.getSelectionModel().getSelectedItem();
-                    Class<?> operatorType = selectedOperator.getArgumentConverter().runtimeGenericTypeProvider;
-                    Function<I, ?> itemFieldGetter
-                            = item -> operatorType.cast(columnPattern.get().getValue(item, columnName));
+    @NonNull
+    private Optional<Predicate<I>> createFilterEvaluator(
+            @NonNull QueryOperator<?> operator, @NonNull Function<I, ?> itemFieldGetter,
+            @NonNull Supplier<?> valueGetter) {
+        // Boolean operators
+        if (operator == QueryOperator.IS_FALSE) {
+            return Optional.of(item -> !((Boolean) itemFieldGetter.apply(item)));
+        }
+        if (operator == QueryOperator.IS_TRUE) {
+            return Optional.of(item -> (Boolean) itemFieldGetter.apply(item));
+        }
 
-                    Supplier<?> valueGetter = () -> {
-                        if (valueValid.get()) {
-                            return operatorType.cast(value.get());
-                        }
-                        throw new IllegalStateException("Tried to read user specified value for being used in a "
-                                + "filter although the user specified value is invalid");
-                    };
+        // String operators
+        if (operator == QueryOperator.CONTAINS) {
+            return Optional.of(item -> ((String) itemFieldGetter.apply(item))
+                    .toLowerCase(Locale.ROOT)
+                    .contains(((String) valueGetter.get()).toLowerCase(Locale.ROOT)));
+        }
+        if (operator == QueryOperator.LIKE) {
+            return Optional.of(item -> ((String) itemFieldGetter.apply(item))
+                    .equalsIgnoreCase((String) valueGetter.get()));
+        }
 
-                    Function<I, Boolean> operator;
-
-                    // Boolean operators
-                    if (selectedOperator == QueryOperator.IS_FALSE) {
-                        operator = item -> !((Boolean) itemFieldGetter.apply(item));
-                    } else if (selectedOperator == QueryOperator.IS_TRUE) {
-                        operator = item -> (Boolean) itemFieldGetter.apply(item);
-                    }
-                    // String operators
-                    else if (selectedOperator == QueryOperator.CONTAINS) {
-                        operator = item -> ((String) itemFieldGetter.apply(item))
-                                .toLowerCase(Locale.ROOT)
-                                .contains(((String) valueGetter.get()).toLowerCase(Locale.ROOT));
-                    } else if (selectedOperator == QueryOperator.LIKE) {
-                        operator = item -> ((String) itemFieldGetter.apply(item))
-                                .equalsIgnoreCase((String) valueGetter.get());
-                    }
-                    // Otherwise
-                    else {
-                        LOGGER.log(Level.WARNING,
-                                String.format("Cannot handle query operator \"%s\"",
-                                        selectedOperator.getOperatorSymbol()));
-                        operator = null;
-                    }
-
-                    if (operator != null) {
-                        String operatorRepresentation = PRETTY_OPERATOR_NAME.getOrDefault(
-                                selectedOperator, selectedOperator.getOperatorSymbol());
-                        String valueRepresentation = ((Supplier<String>) () -> {
-                            if (valueValid.get()) {
-                                if (value.get() == null) {
-                                    return "\"null\"";
-                                }
-                                return "\"" + value.get().toString() + "\"";
-                            }
-                            return "";
-                        }).get();
-                        String description = String.format("%s %s %s", columnName,
-                                operatorRepresentation, valueRepresentation);
-                        newFilter = new TableFilterList.Filter<>(operator::apply, description);
-                    }
-                } else {
-                    LOGGER.log(Level.WARNING,
-                            String.format("Cannot create filter for column %s since it is not supported by the scheme",
-                                    columnName));
-                }
-            }
-            unconfirmedFilter.set(Optional.ofNullable(newFilter));
-        };
-
-        unconfirmedFilterValid.addListener(filterPreviewChangedListener);
-        columnSelection.getSelectionModel().selectedItemProperty().addListener(filterPreviewChangedListener);
-        operatorSelection.getSelectionModel().selectedItemProperty().addListener(filterPreviewChangedListener);
-        value.addListener(filterPreviewChangedListener);
+        // Otherwise
+        LOGGER.log(Level.WARNING, String.format("Cannot handle query operator \"%s\"", operator.getOperatorSymbol()));
+        return Optional.empty();
     }
 
     @NonNull
-    private Node createAddFilterButton() {
+    private Optional<TableFilterList.Filter<I>> createFilter(
+            @NonNull DBConnection.Column<I, ?> column, @NonNull QueryOperator<?> operator) {
+        Optional<? extends ColumnPattern<?, I>> columnPattern = column.getPattern();
+        if (columnPattern.isEmpty()) {
+            LOGGER.log(Level.WARNING,
+                    String.format("Cannot create filter for column %s since it is not supported by the scheme",
+                            column.getName()));
+            return Optional.empty();
+        }
+
+        Class<?> operatorType = operator.getArgumentConverter().runtimeGenericTypeProvider;
+        Function<I, ?> itemFieldGetter
+                = item -> operatorType.cast(columnPattern.get().getValue(item, column.getName()));
+        Supplier<?> valueGetter = () -> {
+            assert valueValid.get() : "Tried to read user specified value for being used in a "
+                    + "filter although the user specified value is invalid";
+            return operatorType.cast(value.get());
+        };
+
+        return createFilterEvaluator(operator, itemFieldGetter, valueGetter)
+                .map(fe -> {
+                    String operatorRepresentation = PRETTY_OPERATOR_NAME.getOrDefault(operator, operator.getOperatorSymbol());
+                    String valueRepresentation = ((Supplier<String>) () -> {
+                        if (valueValid.get()) {
+                            if (value.get() == null) {
+                                return "\"null\"";
+                            }
+                            return "\"" + value.get().toString() + "\"";
+                        }
+                        return "";
+                    }).get();
+                    String description = String.format("%s %s %s", column.getName(),
+                            operatorRepresentation, valueRepresentation);
+                    return new TableFilterList.Filter<>(fe, description);
+                });
+    }
+
+    @NonNull
+    private ObjectProperty<Optional<TableFilterList.Filter<I>>> trackCurrentFilterInput(
+            @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection,
+            @NonNull CheckedComboBox<QueryOperator<?>> operatorSelection) {
+        ObjectProperty<Optional<TableFilterList.Filter<I>>> currentFilterInput
+                = new SimpleObjectProperty<>(Optional.empty());
+
+        Runnable updateCurrentFilter = () -> {
+            if (currentFilterInputValid.get()) {
+                currentFilterInput.set(createFilter(
+                        columnSelection.getSelectionModel().getSelectedItem(),
+                        operatorSelection.getSelectionModel().getSelectedItem()
+                ));
+            } else {
+                currentFilterInput.set(Optional.empty());
+            }
+        };
+        currentFilterInputValid.addListener(obs -> updateCurrentFilter.run());
+        columnSelection.getSelectionModel().selectedItemProperty().addListener(obs -> updateCurrentFilter.run());
+        operatorSelection.getSelectionModel().selectedItemProperty().addListener(obs -> updateCurrentFilter.run());
+        value.addListener(obs -> updateCurrentFilter.run());
+
+        return currentFilterInput;
+    }
+
+    @NonNull
+    private Node createAddFilterButton(@NonNull TableFilterList<I> control) {
         Button addFilter = new Button();
 
         URL graphicsResource = TableFilterListSkin.class.getResource("add.png");
@@ -383,19 +405,16 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             addFilter.setGraphic(new ImageView(graphicsResource.toExternalForm()));
         }
 
-        BooleanBinding isNewFilterPresent = Bindings.createBooleanBinding(
-                () -> unconfirmedFilter.get() != null && unconfirmedFilter.get().isPresent(),
-                unconfirmedFilter);
-
         addFilter.disableProperty()
-                .bind(isNewFilterPresent.not());
-
+                .bind(currentFilterInputValid.not());
         addFilter.setOnAction(aevt -> {
-            if (isNewFilterPresent.get()) {
-                TableFilterList.Filter<I> filterToBeConfirmed = unconfirmedFilter.get().orElseThrow();
-                visibleBadges.get(filterToBeConfirmed).setDisposable(true);
-                unconfirmedFilter.set(Optional.empty());
-            }
+            assert currentFilterInputValid.get();
+            assert currentFilterInput != null;
+            assert currentFilterInput.get().isPresent();
+            TableFilterList.Filter<I> filterToConfirm = currentFilterInput.get().get();
+            currentFilterInput.set(Optional.empty());
+            control.activeFiltersProperty()
+                    .add(filterToConfirm);
         });
 
         return addFilter;
