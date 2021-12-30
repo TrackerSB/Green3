@@ -135,17 +135,20 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         control.activeFiltersProperty()
                 .addListener((ListChangeListener<? super TableFilterList.Filter<I>>) change -> {
                     while (change.next()) {
+                        /* NOTE 2021-12-30: It is required to treat removals before additions in order to handle
+                         * replacements correctly.
+                         */
+                        if (change.wasRemoved()) {
+                            for (TableFilterList.Filter<I> removedCondition : change.getRemoved()) {
+                                removeBadge(removedCondition);
+                            }
+                        }
+
                         if (change.wasAdded()) {
                             for (TableFilterList.Filter<I> addedCondition : change.getAddedSubList()) {
                                 var conditionBadge = new DisposableBadge(addedCondition.description(), true);
                                 conditionBadge.setOnClose(aevt -> control.getActiveFilters().remove(addedCondition));
                                 addBadge(addedCondition, conditionBadge);
-                            }
-                        }
-
-                        if (change.wasRemoved()) {
-                            for (TableFilterList.Filter<I> removedCondition : change.getRemoved()) {
-                                removeBadge(removedCondition);
                             }
                         }
                     }
@@ -154,6 +157,9 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         HBox activeFilterContainer = new HBox();
         visibleBadges.addListener(
                 (MapChangeListener<? super TableFilterList.Filter<I>, ? super DisposableBadge>) change -> {
+                    /* NOTE 2021-12-30: It is required to treat removals before additions in order to handle
+                     * replacements correctly.
+                     */
                     if (change.wasRemoved()) {
                         activeFilterContainer.getChildren()
                                 .remove(change.getValueRemoved());
