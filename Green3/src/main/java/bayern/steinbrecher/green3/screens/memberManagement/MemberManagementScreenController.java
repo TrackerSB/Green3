@@ -25,6 +25,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
@@ -118,7 +119,10 @@ public class MemberManagementScreenController extends ScreenController {
                         FXCollections.observableArrayList(dbConnection.getTableContent(Tables.MEMBERS)));
                 filterableItems.predicateProperty()
                         .bind(memberViewFilterList.filterProperty());
-                memberTable.setItems(filterableItems);
+                var sortableFilterableItems = new SortedList<>(filterableItems);
+                sortableFilterableItems.comparatorProperty()
+                        .bind(memberTable.comparatorProperty());
+                memberTable.setItems(sortableFilterableItems);
                 VBox.setVgrow(memberTable, Priority.ALWAYS);
 
                 Platform.runLater(() -> memberViewPlaceholder.getChildren().addAll(memberTable));
@@ -183,7 +187,6 @@ public class MemberManagementScreenController extends ScreenController {
 
     @FXML
     private void exportMembers() throws IOException {
-        memberTable.getItems();
         FileChooser savePathChooser = new FileChooser();
         savePathChooser.setInitialFileName(resources.getString("export") + ".csv");
         savePathChooser.getExtensionFilters()
