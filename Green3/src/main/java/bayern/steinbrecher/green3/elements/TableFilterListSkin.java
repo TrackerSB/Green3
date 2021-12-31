@@ -6,6 +6,7 @@ import bayern.steinbrecher.dbConnector.DBConnection;
 import bayern.steinbrecher.dbConnector.query.QueryFailedException;
 import bayern.steinbrecher.dbConnector.query.QueryOperator;
 import bayern.steinbrecher.dbConnector.scheme.ColumnPattern;
+import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.MapProperty;
@@ -189,7 +190,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                     protected void updateItem(DBConnection.Column<I, ?> item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setText(item.getName());
+                            Platform.runLater(() -> setText(item.getName()));
                         }
                     }
                 };
