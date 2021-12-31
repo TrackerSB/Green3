@@ -62,7 +62,7 @@ tasks.withType(JavaCompile) {
 buildConfig {
     buildConfigField("String", "APP_NAME", "\"${project.name}\"")
     buildConfigField("String", "APP_VERSION", "\"${project.version}\"")
-    buildConfigField("String", "APP_VERSION_NICKNAME", "\"Featured comback\"")
+    buildConfigField("String", "APP_VERSION_NICKNAME", "\"That's the way\"")
     buildConfigField("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
     packageName("bayern.steinbrecher.green3")
 }
