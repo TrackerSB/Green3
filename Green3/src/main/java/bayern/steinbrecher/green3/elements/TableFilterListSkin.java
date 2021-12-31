@@ -62,6 +62,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
     private final ObjectProperty<Object> value = new SimpleObjectProperty<>(null);
     private final BooleanBinding currentFilterInputValid;
     private final ObjectProperty<Optional<TableFilterList.Filter<I>>> currentFilterInput;
+    private boolean confirmedCurrentFilterInput = false;
 
     public TableFilterListSkin(@NonNull TableFilterList<I> control) {
         super(control);
@@ -87,7 +88,12 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             if (currentUnconfirmedFilter.isPresent()) {
                 control.activeFiltersProperty().add(currentUnconfirmedFilter.get());
             } else {
-                columnSelection.getSelectionModel().clearSelection();
+                if (confirmedCurrentFilterInput) {
+                    columnSelection.getSelectionModel().clearSelection();
+                    confirmedCurrentFilterInput = false;
+                } else {
+                    operatorSelection.getSelectionModel().clearSelection();
+                }
             }
         });
 
@@ -236,7 +242,6 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                         if (item != null && !empty) {
                             setText(PRETTY_OPERATOR_NAME.getOrDefault(item, item.getOperatorSymbol()));
                         } else {
-                            LOGGER.log(Level.INFO, "Encountered empty or null item");
                             setText("");
                         }
                     }
@@ -248,19 +253,30 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
         ChangeListener<DBConnection.Column<?, ?>> selectedItemChanged =
                 (obs, previouslySelected, currentlySelected) -> {
-                    operatorSelection.getSelectionModel().clearSelection();
-                    operatorSelection.getItems().clear();
+                    boolean operatorTypeChanged;
+                    if (previouslySelected == null || currentlySelected == null) {
+                        operatorTypeChanged = true;
+                    } else {
+                        Class<?> previousColumnType = previouslySelected.getColumnType();
+                        Class<?> currentColumnType = currentlySelected.getColumnType();
+                        operatorTypeChanged = !previousColumnType.equals(currentColumnType);
+                    }
 
-                    if (currentlySelected != null) {
-                        Class<?> columnType = currentlySelected.getColumnType();
-                        if (Boolean.class.isAssignableFrom(columnType)) {
-                            operatorSelection.getItems().addAll(QueryOperator.BOOLEAN_OPERATORS);
-                        } else if (String.class.isAssignableFrom(columnType)) {
-                            operatorSelection.getItems().addAll(QueryOperator.STRING_OPERATORS);
-                        } else {
-                            LOGGER.log(Level.WARNING,
-                                    String.format("The type %s of the selected column %s is unsupported",
-                                            columnType.getName(), currentlySelected.getName()));
+                    if (operatorTypeChanged) {
+                        operatorSelection.getSelectionModel().clearSelection();
+                        operatorSelection.getItems().clear();
+
+                        if (currentlySelected != null) {
+                            Class<?> currentColumnType = currentlySelected.getColumnType();
+                            if (Boolean.class.isAssignableFrom(currentColumnType)) {
+                                operatorSelection.getItems().addAll(QueryOperator.BOOLEAN_OPERATORS);
+                            } else if (String.class.isAssignableFrom(currentColumnType)) {
+                                operatorSelection.getItems().addAll(QueryOperator.STRING_OPERATORS);
+                            } else {
+                                LOGGER.log(Level.WARNING,
+                                        String.format("The type %s of the selected column %s is unsupported",
+                                                currentColumnType.getName(), currentlySelected.getName()));
+                            }
                         }
                     }
                 };
@@ -418,6 +434,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             assert currentFilterInputValid.get();
             assert currentFilterInput != null;
             assert currentFilterInput.get().isPresent();
+            confirmedCurrentFilterInput = true;
             TableFilterList.Filter<I> filterToConfirm = currentFilterInput.get().get();
             currentFilterInput.set(Optional.empty());
             control.activeFiltersProperty()
