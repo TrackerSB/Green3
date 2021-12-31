@@ -128,17 +128,6 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
     @NonNull
     private Pane createActiveFilterContainer(@NonNull TableFilterList<I> control) {
-        ChangeListener<Boolean> noActiveFiltersListener = (obs, wereNoFilters, areNoFilters) -> {
-            if (areNoFilters) {
-                addBadge(null, new DisposableBadge(ControlResources.RESOURCES.getString("none"), false));
-            } else {
-                removeBadge(null);
-            }
-        };
-        control.noActiveFiltersProperty()
-                .addListener(noActiveFiltersListener);
-        noActiveFiltersListener.changed(null, null, control.isNoActiveFilters());
-
         control.activeFiltersProperty()
                 .addListener((ListChangeListener<? super TableFilterList.Filter<I>>) change -> {
                     while (change.next()) {
@@ -162,51 +151,28 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                 });
 
         HBox activeFilterContainer = new HBox();
-        MapChangeListener<? super TableFilterList.Filter<I>, ? super DisposableBadge> visibleBadgesChangedListener
-                = change -> {
-            /* NOTE 2021-12-30: It is required to treat removals before additions in order to handle
-             * replacements correctly.
-             */
-            if (change.wasRemoved()) {
-                activeFilterContainer.getChildren()
-                        .remove(change.getValueRemoved());
-            }
-            if (change.wasAdded()) {
-                activeFilterContainer.getChildren()
-                        .add(change.getValueAdded());
-            }
-        };
-        visibleBadges.addListener(visibleBadgesChangedListener);
-
-        // Ensure init
-        visibleBadges.forEach((filter, badge) -> {
-            visibleBadgesChangedListener.onChanged(new MapChangeListener.Change<>(visibleBadges) {
-                @Override
-                public boolean wasAdded() {
-                    return true;
-                }
-
-                @Override
-                public boolean wasRemoved() {
-                    return false;
-                }
-
-                @Override
-                public TableFilterList.Filter<I> getKey() {
-                    return filter;
-                }
-
-                @Override
-                public DisposableBadge getValueAdded() {
-                    return badge;
-                }
-
-                @Override
-                public DisposableBadge getValueRemoved() {
-                    return null;
-                }
-            });
-        });
+        var noFilterBadge = new DisposableBadge(ControlResources.RESOURCES.getString("none"), false);
+        visibleBadges.addListener(
+                (MapChangeListener<? super TableFilterList.Filter<I>, ? super DisposableBadge>) change -> {
+                    /* NOTE 2021-12-30: It is required to treat removals before additions in order to handle
+                     * replacements correctly.
+                     */
+                    if (change.wasRemoved()) {
+                        activeFilterContainer.getChildren()
+                                .remove(change.getValueRemoved());
+                        if (activeFilterContainer.getChildren().isEmpty()) {
+                            addBadge(null, noFilterBadge);
+                        }
+                    }
+                    if (change.wasAdded()) {
+                        activeFilterContainer.getChildren()
+                                .add(change.getValueAdded());
+                        if (change.getKey() != null) {
+                            removeBadge(null);
+                        }
+                    }
+                });
+        visibleBadges.put(null, noFilterBadge);
 
         return activeFilterContainer;
     }
