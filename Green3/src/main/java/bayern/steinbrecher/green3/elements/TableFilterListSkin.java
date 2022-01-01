@@ -331,35 +331,59 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             @NonNull Supplier<?> valueGetter) {
         // Boolean operators
         if (operator == QueryOperator.IS_FALSE) {
-            return Optional.of(item -> !((Boolean) itemFieldGetter.apply(item)));
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && !((Boolean) fieldValue);
+            });
         }
         if (operator == QueryOperator.IS_TRUE) {
-            return Optional.of(item -> (Boolean) itemFieldGetter.apply(item));
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && (Boolean) fieldValue;
+            });
         }
 
         // String operators
         if (operator == QueryOperator.CONTAINS) {
-            return Optional.of(item -> ((String) itemFieldGetter.apply(item))
-                    .toLowerCase(Locale.ROOT)
-                    .contains(((String) valueGetter.get()).toLowerCase(Locale.ROOT)));
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && ((String) fieldValue)
+                        .toLowerCase(Locale.ROOT)
+                        .contains(((String) valueGetter.get()).toLowerCase(Locale.ROOT));
+            });
         }
         if (operator == QueryOperator.LIKE) {
-            return Optional.of(item -> ((String) itemFieldGetter.apply(item))
-                    .equalsIgnoreCase((String) valueGetter.get()));
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && ((String) fieldValue).equalsIgnoreCase((String) valueGetter.get());
+            });
         }
 
         // LocalDate operator
         if (operator == QueryOperator.IS_BEFORE_DATE) {
-            return Optional.of(item -> ((LocalDate) itemFieldGetter.apply(item))
-                    .isBefore((LocalDate) valueGetter.get()));
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && ((LocalDate) fieldValue).isBefore((LocalDate) valueGetter.get());
+            });
         }
         if (operator == QueryOperator.IS_AT_DATE) {
-            return Optional.of(item -> itemFieldGetter.apply(item)
-                    .equals(valueGetter.get()));
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && fieldValue.equals(valueGetter.get());
+            });
         }
         if (operator == QueryOperator.IS_AFTER_DATE) {
-            return Optional.of(item -> ((LocalDate) itemFieldGetter.apply(item))
-                    .isAfter((LocalDate) valueGetter.get()));
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && ((LocalDate) fieldValue).isAfter((LocalDate) valueGetter.get());
+            });
         }
 
         // Otherwise
@@ -379,8 +403,19 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         }
 
         Class<?> operatorType = operator.getArgumentConverter().runtimeGenericTypeProvider;
-        Function<I, ?> itemFieldGetter
-                = item -> operatorType.cast(columnPattern.get().getValue(item, column.getName()));
+        Function<I, ?> itemFieldGetter = item -> {
+            try {
+                return operatorType.cast(columnPattern.get().getValue(item, column.getName()));
+            } catch (ClassCastException ex) {
+                /* NOTE 2022-01-01: Since the order, in which listeners are executed, is not reliable it may happen,
+                 * that, when the type of the selected column changes, the operators are not updated yet and thus try to
+                 * cast a field of the item to a wrong type.
+                 * However, this is not a problem, since after updating the operators another revalidation of the filter
+                 * occurs.
+                 */
+                return null;
+            }
+        };
         Supplier<?> valueGetter = () -> {
             assert valueValid.get() : "Tried to read user specified value for being used in a "
                     + "filter although the user specified value is invalid";
