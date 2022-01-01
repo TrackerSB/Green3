@@ -1,6 +1,7 @@
 package bayern.steinbrecher.green3.elements;
 
 import bayern.steinbrecher.checkedElements.CheckedComboBox;
+import bayern.steinbrecher.checkedElements.CheckedDatePicker;
 import bayern.steinbrecher.checkedElements.textfields.CheckedTextField;
 import bayern.steinbrecher.dbConnector.DBConnection;
 import bayern.steinbrecher.dbConnector.query.QueryFailedException;
@@ -32,6 +33,7 @@ import javafx.util.Callback;
 import lombok.NonNull;
 
 import java.net.URL;
+import java.time.LocalDate;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -54,7 +56,11 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             QueryOperator.IS_FALSE, ControlResources.RESOURCES.getString("no").toLowerCase(Locale.ROOT),
             // String operators
             QueryOperator.CONTAINS, ControlResources.RESOURCES.getString("contains").toLowerCase(Locale.ROOT),
-            QueryOperator.LIKE, ControlResources.RESOURCES.getString("sameAs").toLowerCase(Locale.ROOT)
+            QueryOperator.LIKE, ControlResources.RESOURCES.getString("sameAs").toLowerCase(Locale.ROOT),
+            // LocalDate operators
+            QueryOperator.IS_BEFORE_DATE, ControlResources.RESOURCES.getString("isBeforeDate").toLowerCase(Locale.ROOT),
+            QueryOperator.IS_AT_DATE, ControlResources.RESOURCES.getString("isAtDate").toLowerCase(Locale.ROOT),
+            QueryOperator.IS_AFTER_DATE, ControlResources.RESOURCES.getString("isAfterDate").toLowerCase(Locale.ROOT)
     );
     private final MapProperty<TableFilterList.Filter<I>, DisposableBadge> visibleBadges
             = new SimpleMapProperty<>(FXCollections.observableHashMap());
@@ -269,6 +275,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                                 operatorSelection.getItems().addAll(QueryOperator.BOOLEAN_OPERATORS);
                             } else if (String.class.isAssignableFrom(currentColumnType)) {
                                 operatorSelection.getItems().addAll(QueryOperator.STRING_OPERATORS);
+                            } else if (LocalDate.class.isAssignableFrom(currentColumnType)) {
+                                operatorSelection.getItems().addAll(QueryOperator.LOCALDATE_OPERATORS);
                             } else {
                                 LOGGER.log(Level.WARNING,
                                         String.format("The type %s of the selected column %s is unsupported",
@@ -304,6 +312,12 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                                     .add(inputField);
                             valueValid.bind(inputField.validProperty());
                             value.bind(inputField.textProperty());
+                        } else if (LocalDate.class.isAssignableFrom(columnType)) {
+                            var datePicker = new CheckedDatePicker();
+                            valueContainer.getChildren()
+                                    .add(datePicker);
+                            valueValid.bind(datePicker.validProperty());
+                            value.bind(datePicker.valueProperty());
                         } else {
                             LOGGER.log(Level.WARNING,
                                     String.format("The type %s of the selected column %s is unsupported",
@@ -343,6 +357,20 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         if (operator == QueryOperator.LIKE) {
             return Optional.of(item -> ((String) itemFieldGetter.apply(item))
                     .equalsIgnoreCase((String) valueGetter.get()));
+        }
+
+        // LocalDate operator
+        if (operator == QueryOperator.IS_BEFORE_DATE) {
+            return Optional.of(item -> ((LocalDate) itemFieldGetter.apply(item))
+                    .isBefore((LocalDate) valueGetter.get()));
+        }
+        if (operator == QueryOperator.IS_AT_DATE) {
+            return Optional.of(item -> itemFieldGetter.apply(item)
+                    .equals(valueGetter.get()));
+        }
+        if (operator == QueryOperator.IS_AFTER_DATE) {
+            return Optional.of(item -> ((LocalDate) itemFieldGetter.apply(item))
+                    .isAfter((LocalDate) valueGetter.get()));
         }
 
         // Otherwise
