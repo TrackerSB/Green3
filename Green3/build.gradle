@@ -25,11 +25,11 @@ repositories {
 dependencies {
     implementation 'bayern.steinbrecher:CheckedElements:0.13-rc.7-SNAPSHOT'
     implementation 'bayern.steinbrecher:DBConnector:0.16-rc.10-SNAPSHOT'
-    implementation 'bayern.steinbrecher:JavaUtility:0.18-rc.13-SNAPSHOT'
-    implementation 'bayern.steinbrecher:ScreenSwitcher:0.2.3-rc.3-SNAPSHOT'
+    implementation 'bayern.steinbrecher:JavaUtility:0.18'
+    implementation 'bayern.steinbrecher:ScreenSwitcher:0.2.4'
     implementation 'bayern.steinbrecher:SepaXMLGenerator:0.1-rc.17-SNAPSHOT'
-    annotationProcessor 'io.soabase.record-builder:record-builder-processor:26'
-    implementation 'io.soabase.record-builder:record-builder-core:26'
+    annotationProcessor 'io.soabase.record-builder:record-builder-processor:29'
+    implementation 'io.soabase.record-builder:record-builder-core:29'
 }
 
 application {
