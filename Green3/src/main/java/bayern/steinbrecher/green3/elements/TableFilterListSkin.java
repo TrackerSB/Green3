@@ -117,7 +117,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
     private void removeBadge(TableFilterList.Filter<I> associatedFilter) {
         DisposableBadge removedBadge = visibleBadges.remove(associatedFilter);
         if (removedBadge == null) {
-            LOGGER.log(Level.WARNING, "Cannot remove badge for filter which was not associated");
+            LOGGER.log(Level.FINE, "Cannot remove badge for filter which was not associated");
         }
     }
 
@@ -162,7 +162,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                     if (change.wasAdded()) {
                         activeFilterContainer.getChildren()
                                 .add(change.getValueAdded());
-                        if (change.getKey() != null) {
+                        if (change.getKey() != null && visibleBadges.containsKey(null)) {
                             removeBadge(null);
                         }
                     }
