@@ -68,7 +68,6 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
     private final ObjectProperty<Object> value = new SimpleObjectProperty<>(null);
     private final BooleanBinding currentFilterInputValid;
     private final ObjectProperty<Optional<TableFilterList.Filter<I>>> currentFilterInput;
-    private boolean confirmedCurrentFilterInput = false;
 
     public TableFilterListSkin(@NonNull TableFilterList<I> control) {
         super(control);
@@ -90,20 +89,10 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         currentFilterInput = trackCurrentFilterInput(columnSelection, operatorSelection);
         currentFilterInput.addListener((obs, previousUnconfirmedFilter, currentUnconfirmedFilter) -> {
             previousUnconfirmedFilter.ifPresent(filter -> control.activeFiltersProperty().remove(filter));
-
-            if (currentUnconfirmedFilter.isPresent()) {
-                control.activeFiltersProperty().add(currentUnconfirmedFilter.get());
-            } else {
-                if (confirmedCurrentFilterInput) {
-                    columnSelection.getSelectionModel().clearSelection();
-                    confirmedCurrentFilterInput = false;
-                } else {
-                    operatorSelection.getSelectionModel().clearSelection();
-                }
-            }
+            currentUnconfirmedFilter.ifPresent(filter -> control.activeFiltersProperty().add(filter));
         });
 
-        Node addFilter = createAddFilterButton(control);
+        Node addFilter = createAddFilterButton(control, columnSelection);
 
         getChildren()
                 .add(new HBox(filterDescription, activeFilterContainer, addFilter, columnSelection, operatorSelection,
@@ -442,7 +431,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
     }
 
     @NonNull
-    private Node createAddFilterButton(@NonNull TableFilterList<I> control) {
+    private Node createAddFilterButton(@NonNull TableFilterList<I> control,
+                                       CheckedComboBox<DBConnection.Column<I, ?>> columnSelection) {
         Button addFilter = new Button();
 
         URL graphicsResource = TableFilterListSkin.class.getResource("add.png");
@@ -459,9 +449,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             assert currentFilterInputValid.get();
             assert currentFilterInput != null;
             assert currentFilterInput.get().isPresent();
-            confirmedCurrentFilterInput = true;
             TableFilterList.Filter<I> filterToConfirm = currentFilterInput.get().get();
-            currentFilterInput.set(Optional.empty());
+            columnSelection.getSelectionModel().clearSelection();
             control.activeFiltersProperty()
                     .add(filterToConfirm);
         });
