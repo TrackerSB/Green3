@@ -12,10 +12,10 @@
       <profile name="Gradle Imported" enabled="true">
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
-          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.soabase.record-builder/record-builder-processor/26/5c4c4037cdb9616382939219aeaa3b19a7d4898f/record-builder-processor-26.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.soabase.record-builder/record-builder-processor/29/d3ee26f7c35be6a5ee31a5a50c65b3f1a6c4c50/record-builder-processor-29.jar" />
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.20/18bcea7d5df4d49227b4a0743a536208ce4825bb/lombok-1.18.20.jar" />
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.squareup/javapoet/1.12.1/e0e49f502697522ef047470b117ff81edc9f9a07/javapoet-1.12.1.jar" />
-          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.soabase.record-builder/record-builder-core/26/5b5d06aa2edbe9da80ee7ffb763a2d8f78024295/record-builder-core-26.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.soabase.record-builder/record-builder-core/29/c171848c28612d73ab8e9a03fbc225bba8cc7540/record-builder-core-29.jar" />
         </processorPath>
         <module name="Green3.main" />
       </profile>
