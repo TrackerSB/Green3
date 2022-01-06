@@ -395,6 +395,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                 return fieldValue != null
                         && ((String) fieldValue)
                         .toLowerCase(Locale.ROOT)
+                        // FIXME What happens if value is null?
                         .contains(((String) valueGetter.get()).toLowerCase(Locale.ROOT));
             });
         }
@@ -402,7 +403,10 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             return Optional.of(item -> {
                 Object fieldValue = itemFieldGetter.apply(item);
                 return fieldValue != null
-                        && ((String) fieldValue).equalsIgnoreCase((String) valueGetter.get());
+                        && ((String) fieldValue)
+                        .toLowerCase(Locale.ROOT)
+                        // FIXME What happens if value is null?
+                        .equalsIgnoreCase(((String) valueGetter.get()).toLowerCase(Locale.ROOT));
             });
         }
 
@@ -462,7 +466,18 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         Supplier<?> valueGetter = () -> {
             assert valueValid.get() : "Tried to read user specified value for being used in a "
                     + "filter although the user specified value is invalid";
-            return columnType.cast(value.get());
+
+            try {
+                return columnType.cast(value.get());
+            } catch (ClassCastException ex) {
+                /* NOTE 2022-01-01: Since the order, in which listeners are executed, is not reliable it may happen,
+                 * that, when the type of the selected column changes, the operators are not updated yet and thus try to
+                 * cast a field of the item to a wrong type.
+                 * However, this is not a problem, since after updating the operators another revalidation of the filter
+                 * occurs.
+                 */
+                return null;
+            }
         };
 
         // If checking column for (not) having a null value
