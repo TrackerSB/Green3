@@ -2,6 +2,7 @@ package bayern.steinbrecher.green3.elements;
 
 import bayern.steinbrecher.checkedElements.CheckedComboBox;
 import bayern.steinbrecher.checkedElements.CheckedDatePicker;
+import bayern.steinbrecher.checkedElements.spinner.CheckedIntegerSpinner;
 import bayern.steinbrecher.checkedElements.textfields.CheckedTextField;
 import bayern.steinbrecher.dbConnector.DBConnection;
 import bayern.steinbrecher.dbConnector.query.QueryFailedException;
@@ -266,6 +267,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                                 operatorSelection.getItems().addAll(QueryOperator.STRING_OPERATORS);
                             } else if (LocalDate.class.isAssignableFrom(currentColumnType)) {
                                 operatorSelection.getItems().addAll(QueryOperator.LOCALDATE_OPERATORS);
+                            } else if (Integer.class.isAssignableFrom(currentColumnType)) {
+                                operatorSelection.getItems().addAll(QueryOperator.INTEGER_OPERATORS);
                             } else {
                                 LOGGER.log(Level.WARNING,
                                         String.format("The type %s of the selected column %s is unsupported",
@@ -307,6 +310,15 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                                     .add(datePicker);
                             valueValid.bind(datePicker.validProperty());
                             value.bind(datePicker.valueProperty());
+                        } else if (Integer.class.isAssignableFrom(columnType)) {
+                            var spinner = new CheckedIntegerSpinner();
+                            spinner.setEditable(true);
+                            spinner.getValueFactory()
+                                    .setValue(null);
+                            valueContainer.getChildren()
+                                    .add(spinner);
+                            valueValid.bind(spinner.validProperty());
+                            value.bind(spinner.valueProperty());
                         } else {
                             LOGGER.log(Level.WARNING,
                                     String.format("The type %s of the selected column %s is unsupported",
@@ -386,6 +398,43 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             });
         }
 
+        // Integer operators
+        if (operator == QueryOperator.IS_LESS_I) {
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && (((Integer) fieldValue) < ((Integer) valueGetter.get()));
+            });
+        }
+        if (operator == QueryOperator.IS_LESS_EQUAL_I) {
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && (((Integer) fieldValue) <= ((Integer) valueGetter.get()));
+            });
+        }
+        if (operator == QueryOperator.IS_EQUAL_I) {
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && (fieldValue == valueGetter.get());
+            });
+        }
+        if (operator == QueryOperator.IS_GREATER_EQUAL_I) {
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && (((Integer) fieldValue) >= ((Integer) valueGetter.get()));
+            });
+        }
+        if (operator == QueryOperator.IS_GREATER_I) {
+            return Optional.of(item -> {
+                Object fieldValue = itemFieldGetter.apply(item);
+                return fieldValue != null
+                        && (((Integer) fieldValue) > ((Integer) valueGetter.get()));
+            });
+        }
+
         // Otherwise
         LOGGER.log(Level.WARNING, String.format("Cannot handle query operator \"%s\"", operator.getOperatorSymbol()));
         return Optional.empty();
@@ -419,7 +468,17 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         Supplier<?> valueGetter = () -> {
             assert valueValid.get() : "Tried to read user specified value for being used in a "
                     + "filter although the user specified value is invalid";
-            return operatorType.cast(value.get());
+            try {
+                return operatorType.cast(value.get());
+            } catch (ClassCastException ex) {
+                /* NOTE 2022-01-01: Since the order, in which listeners are executed, is not reliable it may happen,
+                 * that, when the type of the selected column changes, the operators are not updated yet and thus try to
+                 * cast a field of the item to a wrong type.
+                 * However, this is not a problem, since after updating the operators another revalidation of the filter
+                 * occurs.
+                 */
+                return null;
+            }
         };
 
         return createFilterEvaluator(operator, itemFieldGetter, valueGetter)
