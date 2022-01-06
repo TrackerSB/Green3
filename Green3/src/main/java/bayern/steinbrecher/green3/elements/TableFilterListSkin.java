@@ -160,8 +160,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                         }
                     }
                     if (change.wasAdded()) {
-                        activeFilterContainer.getChildren()
-                                .add(change.getValueAdded());
+                        Platform.runLater(() -> activeFilterContainer.getChildren().add(change.getValueAdded()));
                         if (change.getKey() != null && visibleBadges.containsKey(null)) {
                             removeBadge(null);
                         }

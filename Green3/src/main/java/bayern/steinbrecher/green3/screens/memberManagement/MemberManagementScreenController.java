@@ -113,6 +113,9 @@ public class MemberManagementScreenController extends ScreenController {
                     = dbConnection.getTable(Tables.MEMBERS);
             if (optMemberTable.isPresent()) {
                 memberViewFilterList.setTable(optMemberTable.get());
+                memberViewFilterList.activeFiltersProperty().add(
+                        new TableFilterList.Filter<>(
+                                ms -> ms.leavingDate().isEmpty(), resources.getString("currentMembers")));
 
                 memberTable = optMemberTable.get().createTableView();
                 var filterableItems = new FilteredList<>(
@@ -134,7 +137,7 @@ public class MemberManagementScreenController extends ScreenController {
 
     private void setupFilterStatus(@NonNull DBConnection dbConnection) {
         IntegerProperty numOverallMembers = new SimpleIntegerProperty(0);
-        ChangeListener<DBConnection.Table<?, Membership>> filterListTableChanged = (obs, previousTable, currentTable) -> {
+        ChangeListener<DBConnection.Table<?, ?>> filterListTableChanged = (obs, previousTable, currentTable) -> {
             try {
                 numOverallMembers.set(dbConnection.getTableContent(Tables.MEMBERS).size());
             } catch (GenerationFailedException | QueryFailedException ex) {
@@ -144,13 +147,13 @@ public class MemberManagementScreenController extends ScreenController {
         };
         memberViewFilterList.tableProperty()
                 .addListener(filterListTableChanged);
-        filterListTableChanged.changed(null, null, null); // Initialize listener
+        filterListTableChanged.changed(null, null, memberViewFilterList.getTable()); // Initialize listener
         var numOverallMembersFormat = new MessageFormat(resources.getString("numMembers"));
         StringBinding numOverallMembersText = Bindings.createStringBinding(
                 () -> numOverallMembersFormat.format(new Object[]{numOverallMembers.get()}),
                 numOverallMembers);
 
-        IntegerProperty numVisibleMembers = new SimpleIntegerProperty(numOverallMembers.get());
+        IntegerProperty numVisibleMembers = new SimpleIntegerProperty(memberTable.getItems().size());
         ListChangeListener<? super Membership> memberTableChangedListener
                 = change -> numVisibleMembers.set(change.getList().size());
         memberTable.getItems()
