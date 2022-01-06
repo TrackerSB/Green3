@@ -159,8 +159,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                      * replacements correctly.
                      */
                     if (change.wasRemoved()) {
-                        activeFilterContainer.getChildren()
-                                .remove(change.getValueRemoved());
+                        Platform.runLater(() -> activeFilterContainer.getChildren().remove(change.getValueRemoved()));
                         if (activeFilterContainer.getChildren().isEmpty()) {
                             addBadge(null, noFilterBadge);
                         }
