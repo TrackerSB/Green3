@@ -436,7 +436,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
     @NonNull
     private Optional<TableFilterList.Filter<I>> createFilter(
-            @NonNull DBConnection.Column<I, ?> column, @NonNull QueryOperator<?> operator) {
+            @NonNull DBConnection.Column<I, ?> column, QueryOperator<?> operator) {
         Optional<? extends ColumnPattern<?, I>> columnPattern = column.pattern();
         if (columnPattern.isEmpty()) {
             LOGGER.log(Level.WARNING,
@@ -445,10 +445,10 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             return Optional.empty();
         }
 
-        Class<?> operatorType = operator.getArgumentConverter().runtimeGenericTypeProvider;
+        Class<?> columnType = column.columnType();
         Function<I, ?> itemFieldGetter = item -> {
             try {
-                return operatorType.cast(columnPattern.get().getValue(item, column.name()));
+                return columnType.cast(columnPattern.get().getValue(item, column.name()));
             } catch (ClassCastException ex) {
                 /* NOTE 2022-01-01: Since the order, in which listeners are executed, is not reliable it may happen,
                  * that, when the type of the selected column changes, the operators are not updated yet and thus try to
@@ -462,9 +462,18 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         Supplier<?> valueGetter = () -> {
             assert valueValid.get() : "Tried to read user specified value for being used in a "
                     + "filter although the user specified value is invalid";
-            return operatorType.cast(value.get());
+            return columnType.cast(value.get());
         };
 
+        // If checking column for (not) having a null value
+        if (nullValue.get() != null) {
+            if (nullValue.get()) {
+                return Optional.of(new TableFilterList.Filter<>(item -> itemFieldGetter.apply(item) == null, "")); // FIXME Add description
+            }
+            return Optional.of(new TableFilterList.Filter<>(item -> itemFieldGetter.apply(item) != null, "")); // FIXME Add description
+        }
+
+        // Otherwise, compare columns using the selected operator against a given value
         return createFilterEvaluator(operator, itemFieldGetter, valueGetter)
                 .map(fe -> {
                     String operatorRepresentation = PRETTY_OPERATOR_NAME.getOrDefault(operator, operator.getOperatorSymbol());
