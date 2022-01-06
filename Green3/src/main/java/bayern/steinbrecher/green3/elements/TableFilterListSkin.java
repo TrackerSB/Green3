@@ -9,6 +9,7 @@ import bayern.steinbrecher.dbConnector.query.QueryOperator;
 import bayern.steinbrecher.dbConnector.scheme.ColumnPattern;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.MapProperty;
 import javafx.beans.property.ObjectProperty;
@@ -21,6 +22,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SkinBase;
@@ -80,7 +82,11 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
         CheckedComboBox<QueryOperator<?>> operatorSelection = createOperatorSelection(columnSelection);
 
-        Node valueContainer = createValueContainer(columnSelection);
+        CheckBox nullValueSelector = new CheckBox();
+        nullValueSelector.setAllowIndeterminate(true);
+        nullValueSelector.setIndeterminate(true);
+
+        Node valueContainer = createValueContainer(columnSelection, nullValueSelector);
         HBox.setHgrow(valueContainer, Priority.ALWAYS);
 
         currentFilterInputValid = columnSelection.validProperty()
@@ -96,7 +102,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
         getChildren()
                 .add(new HBox(filterDescription, activeFilterContainer, addFilter, columnSelection, operatorSelection,
-                        valueContainer));
+                        nullValueSelector, valueContainer));
     }
 
     private void addBadge(TableFilterList.Filter<I> associatedFilter, @NonNull DisposableBadge badge) {
@@ -282,8 +288,13 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
     @NonNull
     private Node createValueContainer(
-            @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection) {
+            @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection, CheckBox nullValueSelector) {
         Pane valueContainer = new HBox();
+
+        BooleanExpression valueRequired = nullValueSelector.indeterminateProperty();
+        valueContainer.disableProperty()
+                .bind(valueRequired.not());
+
         ChangeListener<DBConnection.Column<?, ?>> selectedItemChanged =
                 (obs, previouslySelected, currentlySelected) -> {
                     valueContainer.getChildren().clear();
@@ -296,12 +307,16 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                             value.set(null);
                         } else if (String.class.isAssignableFrom(columnType)) {
                             var inputField = new CheckedTextField();
+                            inputField.checkedProperty()
+                                    .bind(valueRequired);
                             valueContainer.getChildren()
                                     .add(inputField);
                             valueValid.bind(inputField.validProperty());
                             value.bind(inputField.textProperty());
                         } else if (LocalDate.class.isAssignableFrom(columnType)) {
                             var datePicker = new CheckedDatePicker();
+                            datePicker.checkedProperty()
+                                    .bind(valueRequired);
                             valueContainer.getChildren()
                                     .add(datePicker);
                             valueValid.bind(datePicker.validProperty());
