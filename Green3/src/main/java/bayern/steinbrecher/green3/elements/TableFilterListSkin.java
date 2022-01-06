@@ -10,6 +10,7 @@ import bayern.steinbrecher.dbConnector.scheme.ColumnPattern;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.When;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.MapProperty;
 import javafx.beans.property.ObjectProperty;
@@ -68,6 +69,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             = new SimpleMapProperty<>(FXCollections.observableHashMap());
     private final BooleanProperty valueValid = new SimpleBooleanProperty(false);
     private final ObjectProperty<Object> value = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<Boolean> nullValue = new SimpleObjectProperty<>(null);
     private final BooleanBinding currentFilterInputValid;
     private final ObjectProperty<Optional<TableFilterList.Filter<I>>> currentFilterInput;
 
@@ -80,11 +82,10 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
         CheckedComboBox<DBConnection.Column<I, ?>> columnSelection = createColumnSelection(control.tableProperty());
 
-        CheckedComboBox<QueryOperator<?>> operatorSelection = createOperatorSelection(columnSelection);
+        CheckBox nullValueSelector = createNullValueSelector(columnSelection);
 
-        CheckBox nullValueSelector = new CheckBox();
-        nullValueSelector.setAllowIndeterminate(true);
-        nullValueSelector.setIndeterminate(true);
+        CheckedComboBox<QueryOperator<?>> operatorSelection
+                = createOperatorSelection(columnSelection, nullValueSelector);
 
         Node valueContainer = createValueContainer(columnSelection, nullValueSelector);
         HBox.setHgrow(valueContainer, Priority.ALWAYS);
@@ -92,7 +93,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         currentFilterInputValid = columnSelection.validProperty()
                 .and(operatorSelection.validProperty())
                 .and(valueValid);
-        currentFilterInput = trackCurrentFilterInput(columnSelection, operatorSelection);
+        currentFilterInput = trackCurrentFilterInput(columnSelection, operatorSelection, nullValueSelector);
         currentFilterInput.addListener((obs, previousUnconfirmedFilter, currentUnconfirmedFilter) -> {
             previousUnconfirmedFilter.ifPresent(filter -> control.activeFiltersProperty().remove(filter));
             currentUnconfirmedFilter.ifPresent(filter -> control.activeFiltersProperty().add(filter));
@@ -101,8 +102,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         Node addFilter = createAddFilterButton(control, columnSelection);
 
         getChildren()
-                .add(new HBox(filterDescription, activeFilterContainer, addFilter, columnSelection, operatorSelection,
-                        nullValueSelector, valueContainer));
+                .add(new HBox(filterDescription, activeFilterContainer, addFilter, columnSelection, nullValueSelector,
+                        operatorSelection, valueContainer));
     }
 
     private void addBadge(TableFilterList.Filter<I> associatedFilter, @NonNull DisposableBadge badge) {
@@ -222,10 +223,16 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
     @NonNull
     private static <I> CheckedComboBox<QueryOperator<?>> createOperatorSelection(
-            @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection) {
+            @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection, @NonNull CheckBox nullValueSelector) {
         CheckedComboBox<QueryOperator<?>> operatorSelection = new CheckedComboBox<>();
         operatorSelection.setPlaceholder(new Text(ControlResources.RESOURCES.getString("unsupported")));
         operatorSelection.setEditable(false);
+
+        BooleanExpression operatorRequired = nullValueSelector.indeterminateProperty();
+        operatorSelection.disableProperty()
+                .bind(operatorRequired.not());
+        operatorSelection.checkedProperty()
+                .bind(operatorRequired);
 
         var cellFactory = new Callback<ListView<QueryOperator<?>>, ListCell<QueryOperator<?>>>() {
             @NonNull
@@ -286,8 +293,31 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
     }
 
     @NonNull
+    private CheckBox createNullValueSelector(@NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection) {
+        var nullValueSelector = new CheckBox();
+        nullValueSelector.setAllowIndeterminate(true);
+        nullValueSelector.setIndeterminate(true);
+
+        ObjectProperty<Boolean> selected = new SimpleObjectProperty<>();
+        selected.bind(nullValueSelector.selectedProperty());
+        nullValue.bind(
+                new When(nullValueSelector.indeterminateProperty())
+                        .then((Boolean) null)
+                        .otherwise(selected));
+
+        columnSelection.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((obs, previousColumn, currentColumn) -> {
+                    nullValueSelector.setIndeterminate(true);
+                    nullValueSelector.setDisable(!currentColumn.nullable());
+                });
+
+        return nullValueSelector;
+    }
+
+    @NonNull
     private Node createValueContainer(
-            @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection, CheckBox nullValueSelector) {
+            @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection, @NonNull CheckBox nullValueSelector) {
         Pane valueContainer = new HBox();
 
         BooleanExpression valueRequired = nullValueSelector.indeterminateProperty();
@@ -456,7 +486,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
     @NonNull
     private ObjectProperty<Optional<TableFilterList.Filter<I>>> trackCurrentFilterInput(
             @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection,
-            @NonNull CheckedComboBox<QueryOperator<?>> operatorSelection) {
+            @NonNull CheckedComboBox<QueryOperator<?>> operatorSelection,
+            @NonNull CheckBox nullValueSelector) {
         ObjectProperty<Optional<TableFilterList.Filter<I>>> currentFilterInput
                 = new SimpleObjectProperty<>(Optional.empty());
 
@@ -473,6 +504,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         currentFilterInputValid.addListener(obs -> updateCurrentFilter.run());
         columnSelection.getSelectionModel().selectedItemProperty().addListener(obs -> updateCurrentFilter.run());
         operatorSelection.getSelectionModel().selectedItemProperty().addListener(obs -> updateCurrentFilter.run());
+        nullValueSelector.indeterminateProperty().addListener(obs -> updateCurrentFilter.run());
+        nullValueSelector.selectedProperty().addListener(obs -> updateCurrentFilter.run());
         value.addListener(obs -> updateCurrentFilter.run());
 
         return currentFilterInput;
