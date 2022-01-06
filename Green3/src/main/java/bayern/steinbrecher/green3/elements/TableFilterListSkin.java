@@ -187,7 +187,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                     protected void updateItem(DBConnection.Column<I, ?> item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            Platform.runLater(() -> setText(item.getName()));
+                            Platform.runLater(() -> setText(item.name()));
                         }
                     }
                 };
@@ -203,7 +203,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             if (currentTable != null) {
                 try {
                     columnSelection.getItems().setAll(currentTable.getColumns());
-                    columnSelection.getItems().sort((cA, cB) -> cA.getName().compareToIgnoreCase(cB.getName()));
+                    columnSelection.getItems().sort((cA, cB) -> cA.name().compareToIgnoreCase(cB.name()));
                 } catch (QueryFailedException ex) {
                     LOGGER.log(Level.WARNING, "Could not populate column selection", ex);
                 }
@@ -248,8 +248,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                     if (previouslySelected == null || currentlySelected == null) {
                         operatorTypeChanged = true;
                     } else {
-                        Class<?> previousColumnType = previouslySelected.getColumnType();
-                        Class<?> currentColumnType = currentlySelected.getColumnType();
+                        Class<?> previousColumnType = previouslySelected.columnType();
+                        Class<?> currentColumnType = currentlySelected.columnType();
                         operatorTypeChanged = !previousColumnType.equals(currentColumnType);
                     }
 
@@ -258,7 +258,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                         operatorSelection.getItems().clear();
 
                         if (currentlySelected != null) {
-                            Class<?> currentColumnType = currentlySelected.getColumnType();
+                            Class<?> currentColumnType = currentlySelected.columnType();
                             if (Boolean.class.isAssignableFrom(currentColumnType)) {
                                 operatorSelection.getItems().addAll(QueryOperator.BOOLEAN_OPERATORS);
                             } else if (String.class.isAssignableFrom(currentColumnType)) {
@@ -268,7 +268,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                             } else {
                                 LOGGER.log(Level.WARNING,
                                         String.format("The type %s of the selected column %s is unsupported",
-                                                currentColumnType.getName(), currentlySelected.getName()));
+                                                currentColumnType.getName(), currentlySelected.name()));
                             }
                         }
                     }
@@ -288,7 +288,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                 (obs, previouslySelected, currentlySelected) -> {
                     valueContainer.getChildren().clear();
                     if (currentlySelected != null) {
-                        Class<?> columnType = currentlySelected.getColumnType();
+                        Class<?> columnType = currentlySelected.columnType();
                         if (Boolean.class.isAssignableFrom(columnType)) {
                             valueValid.unbind();
                             valueValid.set(true);
@@ -309,7 +309,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                         } else {
                             LOGGER.log(Level.WARNING,
                                     String.format("The type %s of the selected column %s is unsupported",
-                                            columnType.getName(), currentlySelected.getName()));
+                                            columnType.getName(), currentlySelected.name()));
                             valueValid.unbind();
                             valueValid.set(false);
                             value.unbind();
@@ -393,18 +393,18 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
     @NonNull
     private Optional<TableFilterList.Filter<I>> createFilter(
             @NonNull DBConnection.Column<I, ?> column, @NonNull QueryOperator<?> operator) {
-        Optional<? extends ColumnPattern<?, I>> columnPattern = column.getPattern();
+        Optional<? extends ColumnPattern<?, I>> columnPattern = column.pattern();
         if (columnPattern.isEmpty()) {
             LOGGER.log(Level.WARNING,
                     String.format("Cannot create filter for column %s since it is not supported by the scheme",
-                            column.getName()));
+                            column.name()));
             return Optional.empty();
         }
 
         Class<?> operatorType = operator.getArgumentConverter().runtimeGenericTypeProvider;
         Function<I, ?> itemFieldGetter = item -> {
             try {
-                return operatorType.cast(columnPattern.get().getValue(item, column.getName()));
+                return operatorType.cast(columnPattern.get().getValue(item, column.name()));
             } catch (ClassCastException ex) {
                 /* NOTE 2022-01-01: Since the order, in which listeners are executed, is not reliable it may happen,
                  * that, when the type of the selected column changes, the operators are not updated yet and thus try to
@@ -433,7 +433,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                         }
                         return "";
                     }).get();
-                    String description = String.format("%s %s %s", column.getName(),
+                    String description = String.format("%s %s %s", column.name(),
                             operatorRepresentation, valueRepresentation);
                     return new TableFilterList.Filter<>(fe, description);
                 });
