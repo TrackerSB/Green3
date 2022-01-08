@@ -9,6 +9,8 @@ import bayern.steinbrecher.dbConnector.query.QueryOperator;
 import bayern.steinbrecher.dbConnector.scheme.ColumnPattern;
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.When;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.MapProperty;
 import javafx.beans.property.ObjectProperty;
@@ -21,6 +23,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SkinBase;
@@ -66,6 +69,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             = new SimpleMapProperty<>(FXCollections.observableHashMap());
     private final BooleanProperty valueValid = new SimpleBooleanProperty(false);
     private final ObjectProperty<Object> value = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<Boolean> nullValue = new SimpleObjectProperty<>(null);
     private final BooleanBinding currentFilterInputValid;
     private final ObjectProperty<Optional<TableFilterList.Filter<I>>> currentFilterInput;
 
@@ -78,15 +82,18 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
         CheckedComboBox<DBConnection.Column<I, ?>> columnSelection = createColumnSelection(control.tableProperty());
 
-        CheckedComboBox<QueryOperator<?>> operatorSelection = createOperatorSelection(columnSelection);
+        CheckBox nullValueSelector = createNullValueSelector(columnSelection);
 
-        Node valueContainer = createValueContainer(columnSelection);
+        CheckedComboBox<QueryOperator<?>> operatorSelection
+                = createOperatorSelection(columnSelection, nullValueSelector);
+
+        Node valueContainer = createValueContainer(columnSelection, nullValueSelector);
         HBox.setHgrow(valueContainer, Priority.ALWAYS);
 
         currentFilterInputValid = columnSelection.validProperty()
                 .and(operatorSelection.validProperty())
                 .and(valueValid);
-        currentFilterInput = trackCurrentFilterInput(columnSelection, operatorSelection);
+        currentFilterInput = trackCurrentFilterInput(columnSelection, operatorSelection, nullValueSelector);
         currentFilterInput.addListener((obs, previousUnconfirmedFilter, currentUnconfirmedFilter) -> {
             previousUnconfirmedFilter.ifPresent(filter -> control.activeFiltersProperty().remove(filter));
             currentUnconfirmedFilter.ifPresent(filter -> control.activeFiltersProperty().add(filter));
@@ -95,8 +102,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         Node addFilter = createAddFilterButton(control, columnSelection);
 
         getChildren()
-                .add(new HBox(filterDescription, activeFilterContainer, addFilter, columnSelection, operatorSelection,
-                        valueContainer));
+                .add(new HBox(filterDescription, activeFilterContainer, addFilter, columnSelection, nullValueSelector,
+                        operatorSelection, valueContainer));
     }
 
     private void addBadge(TableFilterList.Filter<I> associatedFilter, @NonNull DisposableBadge badge) {
@@ -153,8 +160,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                      * replacements correctly.
                      */
                     if (change.wasRemoved()) {
-                        activeFilterContainer.getChildren()
-                                .remove(change.getValueRemoved());
+                        Platform.runLater(() -> activeFilterContainer.getChildren().remove(change.getValueRemoved()));
                         if (activeFilterContainer.getChildren().isEmpty()) {
                             addBadge(null, noFilterBadge);
                         }
@@ -187,7 +193,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                     protected void updateItem(DBConnection.Column<I, ?> item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            Platform.runLater(() -> setText(item.getName()));
+                            Platform.runLater(() -> setText(item.name()));
                         }
                     }
                 };
@@ -203,7 +209,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             if (currentTable != null) {
                 try {
                     columnSelection.getItems().setAll(currentTable.getColumns());
-                    columnSelection.getItems().sort((cA, cB) -> cA.getName().compareToIgnoreCase(cB.getName()));
+                    columnSelection.getItems().sort((cA, cB) -> cA.name().compareToIgnoreCase(cB.name()));
                 } catch (QueryFailedException ex) {
                     LOGGER.log(Level.WARNING, "Could not populate column selection", ex);
                 }
@@ -217,10 +223,16 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
     @NonNull
     private static <I> CheckedComboBox<QueryOperator<?>> createOperatorSelection(
-            @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection) {
+            @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection, @NonNull CheckBox nullValueSelector) {
         CheckedComboBox<QueryOperator<?>> operatorSelection = new CheckedComboBox<>();
         operatorSelection.setPlaceholder(new Text(ControlResources.RESOURCES.getString("unsupported")));
         operatorSelection.setEditable(false);
+
+        BooleanExpression operatorRequired = nullValueSelector.indeterminateProperty();
+        operatorSelection.disableProperty()
+                .bind(operatorRequired.not());
+        operatorSelection.checkedProperty()
+                .bind(operatorRequired);
 
         var cellFactory = new Callback<ListView<QueryOperator<?>>, ListCell<QueryOperator<?>>>() {
             @NonNull
@@ -248,8 +260,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                     if (previouslySelected == null || currentlySelected == null) {
                         operatorTypeChanged = true;
                     } else {
-                        Class<?> previousColumnType = previouslySelected.getColumnType();
-                        Class<?> currentColumnType = currentlySelected.getColumnType();
+                        Class<?> previousColumnType = previouslySelected.columnType();
+                        Class<?> currentColumnType = currentlySelected.columnType();
                         operatorTypeChanged = !previousColumnType.equals(currentColumnType);
                     }
 
@@ -258,7 +270,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                         operatorSelection.getItems().clear();
 
                         if (currentlySelected != null) {
-                            Class<?> currentColumnType = currentlySelected.getColumnType();
+                            Class<?> currentColumnType = currentlySelected.columnType();
                             if (Boolean.class.isAssignableFrom(currentColumnType)) {
                                 operatorSelection.getItems().addAll(QueryOperator.BOOLEAN_OPERATORS);
                             } else if (String.class.isAssignableFrom(currentColumnType)) {
@@ -268,7 +280,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                             } else {
                                 LOGGER.log(Level.WARNING,
                                         String.format("The type %s of the selected column %s is unsupported",
-                                                currentColumnType.getName(), currentlySelected.getName()));
+                                                currentColumnType.getName(), currentlySelected.name()));
                             }
                         }
                     }
@@ -281,14 +293,42 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
     }
 
     @NonNull
+    private CheckBox createNullValueSelector(@NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection) {
+        var nullValueSelector = new CheckBox();
+        nullValueSelector.setAllowIndeterminate(true);
+        nullValueSelector.setIndeterminate(true);
+
+        ObjectProperty<Boolean> selected = new SimpleObjectProperty<>();
+        selected.bind(nullValueSelector.selectedProperty());
+        nullValue.bind(
+                new When(nullValueSelector.indeterminateProperty())
+                        .then((Boolean) null)
+                        .otherwise(selected));
+
+        columnSelection.getSelectionModel()
+                .selectedItemProperty()
+                .addListener((obs, previousColumn, currentColumn) -> {
+                    nullValueSelector.setIndeterminate(true);
+                    nullValueSelector.setDisable(!currentColumn.nullable());
+                });
+
+        return nullValueSelector;
+    }
+
+    @NonNull
     private Node createValueContainer(
-            @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection) {
+            @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection, @NonNull CheckBox nullValueSelector) {
         Pane valueContainer = new HBox();
+
+        BooleanExpression valueRequired = nullValueSelector.indeterminateProperty();
+        valueContainer.disableProperty()
+                .bind(valueRequired.not());
+
         ChangeListener<DBConnection.Column<?, ?>> selectedItemChanged =
                 (obs, previouslySelected, currentlySelected) -> {
                     valueContainer.getChildren().clear();
                     if (currentlySelected != null) {
-                        Class<?> columnType = currentlySelected.getColumnType();
+                        Class<?> columnType = currentlySelected.columnType();
                         if (Boolean.class.isAssignableFrom(columnType)) {
                             valueValid.unbind();
                             valueValid.set(true);
@@ -296,12 +336,16 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                             value.set(null);
                         } else if (String.class.isAssignableFrom(columnType)) {
                             var inputField = new CheckedTextField();
+                            inputField.checkedProperty()
+                                    .bind(valueRequired);
                             valueContainer.getChildren()
                                     .add(inputField);
                             valueValid.bind(inputField.validProperty());
                             value.bind(inputField.textProperty());
                         } else if (LocalDate.class.isAssignableFrom(columnType)) {
                             var datePicker = new CheckedDatePicker();
+                            datePicker.checkedProperty()
+                                    .bind(valueRequired);
                             valueContainer.getChildren()
                                     .add(datePicker);
                             valueValid.bind(datePicker.validProperty());
@@ -309,7 +353,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                         } else {
                             LOGGER.log(Level.WARNING,
                                     String.format("The type %s of the selected column %s is unsupported",
-                                            columnType.getName(), currentlySelected.getName()));
+                                            columnType.getName(), currentlySelected.name()));
                             valueValid.unbind();
                             valueValid.set(false);
                             value.unbind();
@@ -351,6 +395,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                 return fieldValue != null
                         && ((String) fieldValue)
                         .toLowerCase(Locale.ROOT)
+                        // FIXME What happens if value is null?
                         .contains(((String) valueGetter.get()).toLowerCase(Locale.ROOT));
             });
         }
@@ -358,7 +403,10 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
             return Optional.of(item -> {
                 Object fieldValue = itemFieldGetter.apply(item);
                 return fieldValue != null
-                        && ((String) fieldValue).equalsIgnoreCase((String) valueGetter.get());
+                        && ((String) fieldValue)
+                        .toLowerCase(Locale.ROOT)
+                        // FIXME What happens if value is null?
+                        .equalsIgnoreCase(((String) valueGetter.get()).toLowerCase(Locale.ROOT));
             });
         }
 
@@ -392,19 +440,19 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
     @NonNull
     private Optional<TableFilterList.Filter<I>> createFilter(
-            @NonNull DBConnection.Column<I, ?> column, @NonNull QueryOperator<?> operator) {
-        Optional<? extends ColumnPattern<?, I>> columnPattern = column.getPattern();
+            @NonNull DBConnection.Column<I, ?> column, QueryOperator<?> operator) {
+        Optional<? extends ColumnPattern<?, I>> columnPattern = column.pattern();
         if (columnPattern.isEmpty()) {
             LOGGER.log(Level.WARNING,
                     String.format("Cannot create filter for column %s since it is not supported by the scheme",
-                            column.getName()));
+                            column.name()));
             return Optional.empty();
         }
 
-        Class<?> operatorType = operator.getArgumentConverter().runtimeGenericTypeProvider;
+        Class<?> columnType = column.columnType();
         Function<I, ?> itemFieldGetter = item -> {
             try {
-                return operatorType.cast(columnPattern.get().getValue(item, column.getName()));
+                return columnType.cast(columnPattern.get().getValue(item, column.name()));
             } catch (ClassCastException ex) {
                 /* NOTE 2022-01-01: Since the order, in which listeners are executed, is not reliable it may happen,
                  * that, when the type of the selected column changes, the operators are not updated yet and thus try to
@@ -418,9 +466,29 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         Supplier<?> valueGetter = () -> {
             assert valueValid.get() : "Tried to read user specified value for being used in a "
                     + "filter although the user specified value is invalid";
-            return operatorType.cast(value.get());
+
+            try {
+                return columnType.cast(value.get());
+            } catch (ClassCastException ex) {
+                /* NOTE 2022-01-01: Since the order, in which listeners are executed, is not reliable it may happen,
+                 * that, when the type of the selected column changes, the operators are not updated yet and thus try to
+                 * cast a field of the item to a wrong type.
+                 * However, this is not a problem, since after updating the operators another revalidation of the filter
+                 * occurs.
+                 */
+                return null;
+            }
         };
 
+        // If checking column for (not) having a null value
+        if (nullValue.get() != null) {
+            if (nullValue.get()) {
+                return Optional.of(new TableFilterList.Filter<>(item -> itemFieldGetter.apply(item) == null, "")); // FIXME Add description
+            }
+            return Optional.of(new TableFilterList.Filter<>(item -> itemFieldGetter.apply(item) != null, "")); // FIXME Add description
+        }
+
+        // Otherwise, compare columns using the selected operator against a given value
         return createFilterEvaluator(operator, itemFieldGetter, valueGetter)
                 .map(fe -> {
                     String operatorRepresentation = PRETTY_OPERATOR_NAME.getOrDefault(operator, operator.getOperatorSymbol());
@@ -433,7 +501,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                         }
                         return "";
                     }).get();
-                    String description = String.format("%s %s %s", column.getName(),
+                    String description = String.format("%s %s %s", column.name(),
                             operatorRepresentation, valueRepresentation);
                     return new TableFilterList.Filter<>(fe, description);
                 });
@@ -442,7 +510,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
     @NonNull
     private ObjectProperty<Optional<TableFilterList.Filter<I>>> trackCurrentFilterInput(
             @NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection,
-            @NonNull CheckedComboBox<QueryOperator<?>> operatorSelection) {
+            @NonNull CheckedComboBox<QueryOperator<?>> operatorSelection,
+            @NonNull CheckBox nullValueSelector) {
         ObjectProperty<Optional<TableFilterList.Filter<I>>> currentFilterInput
                 = new SimpleObjectProperty<>(Optional.empty());
 
@@ -459,6 +528,8 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         currentFilterInputValid.addListener(obs -> updateCurrentFilter.run());
         columnSelection.getSelectionModel().selectedItemProperty().addListener(obs -> updateCurrentFilter.run());
         operatorSelection.getSelectionModel().selectedItemProperty().addListener(obs -> updateCurrentFilter.run());
+        nullValueSelector.indeterminateProperty().addListener(obs -> updateCurrentFilter.run());
+        nullValueSelector.selectedProperty().addListener(obs -> updateCurrentFilter.run());
         value.addListener(obs -> updateCurrentFilter.run());
 
         return currentFilterInput;
