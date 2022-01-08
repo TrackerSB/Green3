@@ -2,6 +2,8 @@
     -fx-border-color: red;
 }
 
+/* Screens */
+
 .screen {
     -fx-background-color: white;
 }
@@ -13,4 +15,46 @@
 .screen-overlay-text {
     -fx-fill: white;
     -fx-font-size: 50;
+}
+
+/* DisposableBadge */
+
+.disposable-badge {
+    -fx-background-color: grey;
+    -fx-background-radius: 10;
+    -fx-padding: 5;
+}
+
+.disposable-badge Button {
+    -fx-background-color: transparent;
+    -fx-graphic: url("elements/remove.png");
+}
+
+.disposable-badge Button:hover {
+    -fx-background-color: lightGrey;
+}
+
+.disposable-badge Button:pressed {
+    -fx-background-color: darkGrey;
+}
+
+.disposable-badge HBox {
+    -fx-alignment: center;
+}
+
+/* TableFilterList */
+
+.table-filter-list .clearFilterButton {
+    -fx-graphic: url("elements/remove.png");
+}
+
+.table-filter-list .unconfirmed-filter-container {
+    -fx-border-color: black;
+    -fx-border-radius: 10;
+    -fx-padding: 5;
+}
+
+.table-filter-list HBox {
+    -fx-alignment: center-left;
+    -fx-spacing: 5;
 }

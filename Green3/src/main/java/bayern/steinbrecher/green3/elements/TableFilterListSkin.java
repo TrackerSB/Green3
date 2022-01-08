@@ -76,6 +76,9 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
     public TableFilterListSkin(@NonNull TableFilterList<I> control) {
         super(control);
 
+        control.getStyleClass()
+                .add("table-filter-list");
+
         Text filterDescription = new Text(ControlResources.RESOURCES.getString("filters"));
 
         Node activeFilterContainer = createActiveFilterContainer(control);
@@ -91,6 +94,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
         Node clearFilter = createClearFilterButton(columnSelection);
         HBox.setHgrow(clearFilter, Priority.ALWAYS);
+        clearFilter.getStyleClass().add("clearFilterButton");
 
         currentFilterInputValid = columnSelection.validProperty()
                 .and(operatorSelection.validProperty())
@@ -103,9 +107,12 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
         Node addFilter = createAddFilterButton(control, columnSelection);
 
-        getChildren()
-                .add(new HBox(filterDescription, activeFilterContainer, addFilter, columnSelection, nullValueSelector,
-                        operatorSelection, valueContainer, clearFilter));
+        Node unconfirmedFilterContainer = new HBox(columnSelection, nullValueSelector, operatorSelection,
+                valueContainer, addFilter, clearFilter);
+        unconfirmedFilterContainer.getStyleClass().add("unconfirmed-filter-container");
+
+        var container = new HBox(filterDescription, activeFilterContainer, unconfirmedFilterContainer);
+        getChildren().add(container);
     }
 
     private void addBadge(TableFilterList.Filter<I> associatedFilter, @NonNull DisposableBadge badge) {
@@ -372,7 +379,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
     @NonNull
     private Node createClearFilterButton(@NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection) {
-        var clearFilter = new Button("X");
+        var clearFilter = new Button();
         clearFilter.setOnAction(aevt -> columnSelection.getSelectionModel().clearSelection());
         return clearFilter;
     }
