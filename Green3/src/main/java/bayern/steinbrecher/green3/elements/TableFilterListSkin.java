@@ -311,7 +311,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                 .selectedItemProperty()
                 .addListener((obs, previousColumn, currentColumn) -> {
                     nullValueSelector.setIndeterminate(true);
-                    nullValueSelector.setDisable(!currentColumn.nullable());
+                    nullValueSelector.setDisable(currentColumn == null || !currentColumn.nullable());
                 });
 
         return nullValueSelector;
