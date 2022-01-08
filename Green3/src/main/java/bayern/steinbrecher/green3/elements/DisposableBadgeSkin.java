@@ -19,13 +19,16 @@ public class DisposableBadgeSkin extends SkinBase<DisposableBadge> {
         content.textProperty()
                 .bind(control.textProperty());
 
-        Button closeButton = new Button("X");
+        Button closeButton = new Button();
         closeButton.disableProperty()
                 .bind(control.disposableProperty().not());
         closeButton.onActionProperty()
                 .bind(control.onCloseProperty());
 
-        getChildren()
-                .add(new HBox(content, closeButton));
+        var container = new HBox(content, closeButton);
+        getChildren().add(container);
+
+        // Setup styles
+        control.getStyleClass().add("disposable-badge");
     }
 }

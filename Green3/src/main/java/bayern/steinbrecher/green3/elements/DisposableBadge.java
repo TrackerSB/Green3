@@ -29,7 +29,6 @@ public class DisposableBadge extends Control {
     }
 
     public DisposableBadge(String text, boolean disposable) {
-        getStyleClass().add("disposable-badge");
         setText(text);
         setDisposable(disposable);
     }

@@ -35,9 +35,6 @@ public class TableFilterList<I> extends Control implements Reportable {
     private final ObjectProperty<DBConnection.Table<?, I>> table = new SimpleObjectProperty<>(null);
 
     public TableFilterList() {
-        getStyleClass()
-                .add("table-filter-list");
-
         tableProperty()
                 .addListener((obs, previousScheme, currentScheme) -> activeFiltersProperty().clear());
         activeFiltersProperty()
