@@ -88,7 +88,9 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                 = createOperatorSelection(columnSelection, nullValueSelector);
 
         Node valueContainer = createValueContainer(columnSelection, nullValueSelector);
-        HBox.setHgrow(valueContainer, Priority.ALWAYS);
+
+        Node clearFilter = createClearFilterButton(columnSelection);
+        HBox.setHgrow(clearFilter, Priority.ALWAYS);
 
         currentFilterInputValid = columnSelection.validProperty()
                 .and(operatorSelection.validProperty())
@@ -103,7 +105,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
         getChildren()
                 .add(new HBox(filterDescription, activeFilterContainer, addFilter, columnSelection, nullValueSelector,
-                        operatorSelection, valueContainer));
+                        operatorSelection, valueContainer, clearFilter));
     }
 
     private void addBadge(TableFilterList.Filter<I> associatedFilter, @NonNull DisposableBadge badge) {
@@ -309,7 +311,7 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
                 .selectedItemProperty()
                 .addListener((obs, previousColumn, currentColumn) -> {
                     nullValueSelector.setIndeterminate(true);
-                    nullValueSelector.setDisable(!currentColumn.nullable());
+                    nullValueSelector.setDisable(currentColumn == null || !currentColumn.nullable());
                 });
 
         return nullValueSelector;
@@ -366,6 +368,13 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         selectedItemChanged.changed(null, null, columnSelection.getValue());
 
         return valueContainer;
+    }
+
+    @NonNull
+    private Node createClearFilterButton(@NonNull CheckedComboBox<DBConnection.Column<I, ?>> columnSelection) {
+        var clearFilter = new Button("X");
+        clearFilter.setOnAction(aevt -> columnSelection.getSelectionModel().clearSelection());
+        return clearFilter;
     }
 
     @NonNull
