@@ -113,9 +113,11 @@ public class MemberManagementScreenController extends ScreenController {
                     = dbConnection.getTable(Tables.MEMBERS);
             if (optMemberTable.isPresent()) {
                 memberViewFilterList.setTable(optMemberTable.get());
-                memberViewFilterList.activeFiltersProperty().add(
-                        new TableFilterList.Filter<>(
-                                ms -> ms.leavingDate().isEmpty(), resources.getString("currentMembers")));
+                if (FeatureRegistry.MEMBER_MANAGEMENT_TABLE_FILTERS.isEnabled()) {
+                    memberViewFilterList.activeFiltersProperty().add(
+                            new TableFilterList.Filter<>(
+                                    ms -> ms.leavingDate().isEmpty(), resources.getString("currentMembers")));
+                }
 
                 memberTable = optMemberTable.get().createTableView();
                 var filterableItems = new FilteredList<>(
