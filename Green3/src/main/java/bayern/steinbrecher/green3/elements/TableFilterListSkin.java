@@ -498,22 +498,27 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
         // If checking column for (not) having a null value
         if (nullValue.get() != null) {
+            String valueRepresentation;
+            Predicate<I> test;
             if (nullValue.get()) {
-                return Optional.of(new TableFilterList.Filter<>(item -> itemFieldGetter.apply(item) == null, "")); // FIXME Add description
+                valueRepresentation = ControlResources.RESOURCES.getString("isNull").toLowerCase(Locale.ROOT);
+                test = item -> itemFieldGetter.apply(item) == null;
+            } else {
+                valueRepresentation = ControlResources.RESOURCES.getString("isNotNull").toLowerCase(Locale.ROOT);
+                test = item -> itemFieldGetter.apply(item) != null;
             }
-            return Optional.of(new TableFilterList.Filter<>(item -> itemFieldGetter.apply(item) != null, "")); // FIXME Add description
+            var description = String.format("%s %s", column.name(), valueRepresentation);
+            return Optional.of(new TableFilterList.Filter<>(test, description));
         }
 
         // Otherwise, compare columns using the selected operator against a given value
         return createFilterEvaluator(operator, itemFieldGetter, valueGetter)
                 .map(fe -> {
-                    String operatorRepresentation = PRETTY_OPERATOR_NAME.getOrDefault(operator, operator.getOperatorSymbol());
+                    String operatorRepresentation
+                            = PRETTY_OPERATOR_NAME.getOrDefault(operator, operator.getOperatorSymbol());
                     String valueRepresentation = ((Supplier<String>) () -> {
                         if (valueValid.get()) {
-                            if (value.get() == null) {
-                                return "\"null\"";
-                            }
-                            return "\"" + value.get().toString() + "\"";
+                            return (value.get() == null) ? "" : ("\"" + value.get().toString() + "\"");
                         }
                         return "";
                     }).get();
