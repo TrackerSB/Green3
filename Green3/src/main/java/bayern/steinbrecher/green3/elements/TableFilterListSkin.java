@@ -514,13 +514,11 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
         // Otherwise, compare columns using the selected operator against a given value
         return createFilterEvaluator(operator, itemFieldGetter, valueGetter)
                 .map(fe -> {
-                    String operatorRepresentation = PRETTY_OPERATOR_NAME.getOrDefault(operator, operator.getOperatorSymbol());
+                    String operatorRepresentation
+                            = PRETTY_OPERATOR_NAME.getOrDefault(operator, operator.getOperatorSymbol());
                     String valueRepresentation = ((Supplier<String>) () -> {
                         if (valueValid.get()) {
-                            if (value.get() == null) {
-                                return "\"null\"";
-                            }
-                            return "\"" + value.get().toString() + "\"";
+                            return (value.get() == null) ? "" : ("\"" + value.get().toString() + "\"");
                         }
                         return "";
                     }).get();
