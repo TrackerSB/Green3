@@ -498,10 +498,17 @@ public class TableFilterListSkin<I> extends SkinBase<TableFilterList<I>> {
 
         // If checking column for (not) having a null value
         if (nullValue.get() != null) {
+            String valueRepresentation;
+            Predicate<I> test;
             if (nullValue.get()) {
-                return Optional.of(new TableFilterList.Filter<>(item -> itemFieldGetter.apply(item) == null, "")); // FIXME Add description
+                valueRepresentation = ControlResources.RESOURCES.getString("isNull").toLowerCase(Locale.ROOT);
+                test = item -> itemFieldGetter.apply(item) == null;
+            } else {
+                valueRepresentation = ControlResources.RESOURCES.getString("isNotNull").toLowerCase(Locale.ROOT);
+                test = item -> itemFieldGetter.apply(item) != null;
             }
-            return Optional.of(new TableFilterList.Filter<>(item -> itemFieldGetter.apply(item) != null, "")); // FIXME Add description
+            var description = String.format("%s %s", column.name(), valueRepresentation);
+            return Optional.of(new TableFilterList.Filter<>(test, description));
         }
 
         // Otherwise, compare columns using the selected operator against a given value
