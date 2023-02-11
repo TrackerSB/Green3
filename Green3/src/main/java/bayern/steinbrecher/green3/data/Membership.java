@@ -4,6 +4,7 @@ import bayern.steinbrecher.sepaxmlgenerator.DirectDebitMandate;
 import io.soabase.recordbuilder.core.RecordBuilder;
 
 import java.time.LocalDate;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -33,4 +34,19 @@ public record Membership(
         Optional<Boolean> honoraryPrincipal,
         Optional<Boolean> managementBoardMember
 ) implements MembershipBuilder.With {
+    /**
+     * @return {@code true} iff two memberships are considered equal based on the primary key of {@link Tables#MEMBERS}.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Membership that = (Membership) o;
+        return Objects.equals(mandate.id(), that.mandate.id());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mandate.id());
+    }
 }

@@ -12,7 +12,7 @@ plugins {
 group 'bayern.steinbrecher.Green3'
 version '3u00-rc01-SNAPSHOT'
 
-sourceCompatibility = 17
+sourceCompatibility = 18
 targetCompatibility = "$sourceCompatibility" as Integer
 
 repositories {
@@ -24,12 +24,12 @@ repositories {
 
 dependencies {
     implementation 'bayern.steinbrecher:CheckedElements:0.13-rc.10-SNAPSHOT'
-    implementation 'bayern.steinbrecher:DBConnector:0.16-rc.14-SNAPSHOT'
+    implementation 'bayern.steinbrecher:DBConnector:0.16-rc.71-SNAPSHOT'
     implementation 'bayern.steinbrecher:JavaUtility:0.18'
     implementation 'bayern.steinbrecher:ScreenSwitcher:0.2.4'
-    implementation 'bayern.steinbrecher:SepaXMLGenerator:0.1-rc.17-SNAPSHOT'
-    annotationProcessor 'io.soabase.record-builder:record-builder-processor:29'
-    implementation 'io.soabase.record-builder:record-builder-core:29'
+    implementation 'bayern.steinbrecher:SepaXMLGenerator:0.1-rc.26-SNAPSHOT'
+    annotationProcessor 'io.soabase.record-builder:record-builder-processor:34'
+    implementation 'io.soabase.record-builder:record-builder-core:34'
 }
 
 application {

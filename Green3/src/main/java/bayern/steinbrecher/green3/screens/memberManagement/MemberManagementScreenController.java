@@ -8,6 +8,9 @@ import bayern.steinbrecher.dbConnector.credentials.SshCredentials;
 import bayern.steinbrecher.dbConnector.query.GenerationFailedException;
 import bayern.steinbrecher.dbConnector.query.QueryFailedException;
 import bayern.steinbrecher.dbConnector.query.SupportedDBMS;
+import bayern.steinbrecher.dbConnector.utility.DBSynchronizer;
+import bayern.steinbrecher.dbConnector.utility.InvalidSyncTargetException;
+import bayern.steinbrecher.dbConnector.utility.TableViewGenerator;
 import bayern.steinbrecher.green3.data.Membership;
 import bayern.steinbrecher.green3.data.Tables;
 import bayern.steinbrecher.green3.elements.TableFilterList;
@@ -24,6 +27,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
@@ -119,15 +123,25 @@ public class MemberManagementScreenController extends ScreenController {
                                     ms -> ms.leavingDate().isEmpty(), resources.getString("currentMembers")));
                 }
 
-                memberTable = optMemberTable.get().createTableView();
-                var filterableItems = new FilteredList<>(
-                        FXCollections.observableArrayList(dbConnection.getTableContent(Tables.MEMBERS)));
-                filterableItems.predicateProperty()
-                        .bind(memberViewFilterList.filterProperty());
+                memberTable = TableViewGenerator.createTableView(optMemberTable.get());
+                ObservableList<Membership> memberItems
+                        = FXCollections.observableArrayList(dbConnection.getTableContent(Tables.MEMBERS));
+                try {
+                    new DBSynchronizer<>(Tables.MEMBERS, dbConnection).synchronize(memberItems);
+                    memberTable.setEditable(true);
+                } catch (InvalidSyncTargetException ex) {
+                    LOGGER.log(Level.WARNING, "Could not setup synchronization with database. "
+                            + "The table won't be editable", ex);
+                    memberTable.setEditable(false);
+                }
+
+                var filterableItems = new FilteredList<>(memberItems);
+                filterableItems.predicateProperty().bind(memberViewFilterList.filterProperty());
                 var sortableFilterableItems = new SortedList<>(filterableItems);
                 sortableFilterableItems.comparatorProperty()
                         .bind(memberTable.comparatorProperty());
                 memberTable.setItems(sortableFilterableItems);
+
                 VBox.setVgrow(memberTable, Priority.ALWAYS);
 
                 Platform.runLater(() -> memberViewPlaceholder.getChildren().addAll(memberTable));
