@@ -6,3 +6,7 @@ since: 3u00
 #exportMembers {
     -fx-graphic: url("export.png");
 }
+
+#saveChanges {
+    -fx-graphic: url("save.png");
+}

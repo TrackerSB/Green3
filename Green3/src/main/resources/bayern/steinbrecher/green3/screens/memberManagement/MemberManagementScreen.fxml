@@ -28,9 +28,15 @@ since: 3u00
             </VBox>
         </center>
         <bottom>
-            <Button fx:id="exportMembers"
-                    onAction="#exportMembers"
-                    text="%export"/>
+            <HBox>
+                <Button fx:id="exportMembers"
+                        onAction="#exportMembers"
+                        text="%export"/>
+                <Button fx:id="saveChanges"
+                        onAction="#saveChanges"
+                        text="%saveChanges"
+                        disable="${!controller.changesMade}"/>
+            </HBox>
         </bottom>
     </BorderPane>
 </StackPane>

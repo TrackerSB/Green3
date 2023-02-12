@@ -8,8 +8,6 @@ import bayern.steinbrecher.dbConnector.credentials.SshCredentials;
 import bayern.steinbrecher.dbConnector.query.GenerationFailedException;
 import bayern.steinbrecher.dbConnector.query.QueryFailedException;
 import bayern.steinbrecher.dbConnector.query.SupportedDBMS;
-import bayern.steinbrecher.dbConnector.utility.DBSynchronizer;
-import bayern.steinbrecher.dbConnector.utility.InvalidSyncTargetException;
 import bayern.steinbrecher.dbConnector.utility.TableViewGenerator;
 import bayern.steinbrecher.green3.data.Membership;
 import bayern.steinbrecher.green3.data.Tables;
@@ -20,11 +18,14 @@ import bayern.steinbrecher.javaUtility.IOUtility;
 import bayern.steinbrecher.screenswitcher.ScreenController;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.binding.When;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -49,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -72,8 +74,13 @@ public class MemberManagementScreenController extends ScreenController {
     @FXML
     private Button exportMembers;
     @FXML
+    private Button saveChanges;
+    @FXML
     private ResourceBundle resources;
     private TableView<Membership> memberTable;
+    private final SimpleListProperty<EntryChange> recordedChanges
+            = new SimpleListProperty<>(FXCollections.observableArrayList());
+    private final BooleanBinding changesMade = recordedChanges.emptyProperty().not();
 
     @FXML
     private void initialize() {
@@ -86,6 +93,9 @@ public class MemberManagementScreenController extends ScreenController {
                 .bind(FeatureRegistry.MEMBER_MANAGEMENT_EXPORT.enabledProperty());
         exportMembers.managedProperty()
                 .bind(exportMembers.visibleProperty());
+
+        saveChanges.visibleProperty()
+                .bind(FeatureRegistry.MEMBER_MANAGEMENT_EDIT.enabledProperty());
     }
 
     @NonNull
@@ -111,6 +121,27 @@ public class MemberManagementScreenController extends ScreenController {
         }
     }
 
+    private void recordChangesFor(@NonNull ObservableList<Membership> memberItems) {
+        memberItems.addListener((ListChangeListener<? super Membership>) change -> {
+            while (change.next()) {
+                List<? extends Membership> removedItems = change.getRemoved();
+                List<? extends Membership> addedItems = change.getAddedSubList();
+
+                for (Membership removedItem : removedItems) {
+                    recordedChanges.add(new EntryChange(Optional.of(removedItem), Optional.empty()));
+                }
+
+                for (Membership addedItem : addedItems) {
+                    recordedChanges.add(new EntryChange(Optional.empty(), Optional.of(addedItem)));
+                }
+            }
+
+            /* TODO Optimize set of recorded changes by merging entries like multiple updates on the same cell or
+             * addition with removal of same entry
+             */
+        });
+    }
+
     private void setupMemberViewColumns(@NonNull DBConnection dbConnection) {
         try {
             Optional<DBConnection.Table<Set<Membership>, Membership>> optMemberTable
@@ -124,16 +155,10 @@ public class MemberManagementScreenController extends ScreenController {
                 }
 
                 memberTable = TableViewGenerator.createTableView(optMemberTable.get());
+                memberTable.setEditable(FeatureRegistry.MEMBER_MANAGEMENT_EDIT.isEnabled());
+
                 ObservableList<Membership> memberItems
                         = FXCollections.observableArrayList(dbConnection.getTableContent(Tables.MEMBERS));
-                try {
-                    new DBSynchronizer<>(Tables.MEMBERS, dbConnection).synchronize(memberItems);
-                    memberTable.setEditable(true);
-                } catch (InvalidSyncTargetException ex) {
-                    LOGGER.log(Level.WARNING, "Could not setup synchronization with database. "
-                            + "The table won't be editable", ex);
-                    memberTable.setEditable(false);
-                }
 
                 var filterableItems = new FilteredList<>(memberItems);
                 filterableItems.predicateProperty().bind(memberViewFilterList.filterProperty());
@@ -142,8 +167,11 @@ public class MemberManagementScreenController extends ScreenController {
                         .bind(memberTable.comparatorProperty());
                 memberTable.setItems(sortableFilterableItems);
 
-                VBox.setVgrow(memberTable, Priority.ALWAYS);
+                if (FeatureRegistry.MEMBER_MANAGEMENT_EDIT.isEnabled()) {
+                    recordChangesFor(memberItems);
+                }
 
+                VBox.setVgrow(memberTable, Priority.ALWAYS);
                 Platform.runLater(() -> memberViewPlaceholder.getChildren().addAll(memberTable));
             }
         } catch (QueryFailedException | GenerationFailedException ex) {
@@ -236,5 +264,21 @@ public class MemberManagementScreenController extends ScreenController {
 
             IOUtility.writeCSV(savePath.toPath(), content, CSVFormat.EXCEL);
         }
+    }
+
+    @FXML
+    private void saveChanges() {
+        for (EntryChange change : recordedChanges) {
+            System.out.println(change);
+        }
+        recordedChanges.clear();
+    }
+
+    public ObservableBooleanValue changesMadeProperty() {
+        return changesMade;
+    }
+
+    public boolean isChangesMade() {
+        return changesMadeProperty().get();
     }
 }

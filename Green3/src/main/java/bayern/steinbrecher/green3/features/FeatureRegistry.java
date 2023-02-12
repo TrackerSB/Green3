@@ -30,10 +30,15 @@ public final class FeatureRegistry {
             = new MemberManagementScreenFeature(
             new FeatureDescription("tableFilter", "add.png", false, List.of()),
             true);
+    public static final MemberManagementScreenFeature MEMBER_MANAGEMENT_EDIT
+            = new MemberManagementScreenFeature(
+            new FeatureDescription("saveChanges", "save.png", false, List.of()),
+            true);
     public static final Feature MEMBER_MANAGEMENT_SCREEN = new Feature(
             new FeatureDescription("memberManagementScreen", null, true, List.of(
                     MEMBER_MANAGEMENT_EXPORT,
-                    MEMBER_MANAGEMENT_TABLE_FILTERS
+                    MEMBER_MANAGEMENT_TABLE_FILTERS,
+                    MEMBER_MANAGEMENT_EDIT
             )), true) {
         @Override
         protected @NonNull Class<?> getAssociatedClass() {
