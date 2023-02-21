@@ -6,7 +6,9 @@ import bayern.steinbrecher.dbConnector.DBConnection;
 import bayern.steinbrecher.dbConnector.SshConnection;
 import bayern.steinbrecher.dbConnector.credentials.SshCredentials;
 import bayern.steinbrecher.dbConnector.query.GenerationFailedException;
+import bayern.steinbrecher.dbConnector.query.QueryCondition;
 import bayern.steinbrecher.dbConnector.query.QueryFailedException;
+import bayern.steinbrecher.dbConnector.query.QueryGenerator;
 import bayern.steinbrecher.dbConnector.query.SupportedDBMS;
 import bayern.steinbrecher.dbConnector.utility.TableViewGenerator;
 import bayern.steinbrecher.green3.data.Membership;
@@ -50,7 +52,9 @@ import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -81,6 +85,7 @@ public class MemberManagementScreenController extends ScreenController {
     private final SimpleListProperty<EntryChange> recordedChanges
             = new SimpleListProperty<>(FXCollections.observableArrayList());
     private final BooleanBinding changesMade = recordedChanges.emptyProperty().not();
+    private DBConnection dbConnection;
 
     @FXML
     private void initialize() {
@@ -219,6 +224,8 @@ public class MemberManagementScreenController extends ScreenController {
         CompletableFuture.runAsync(() -> getScreenManager().showOverlay(resources.getString("retrievingData")))
                 .thenApply(v -> connectToMemberDB())
                 .thenAccept(dbConnection -> {
+                    this.dbConnection = dbConnection;
+
                     setupMemberViewColumns(dbConnection);
                     setupFilterStatus(dbConnection);
                 })
@@ -266,10 +273,50 @@ public class MemberManagementScreenController extends ScreenController {
         }
     }
 
+    private void executeUpdate(QueryGenerator generator, DBConnection.Table<?, ?> table, EntryChange change) {
+        Map<String, String> changes = new HashMap<>();
+        Iterable<QueryCondition<?>> conditions = List.of();
+        try {
+            generator.generateUpdateQueryStatement(
+                    dbConnection.getDatabaseName(), table, changes, conditions);
+        } catch (GenerationFailedException ex) {
+            LOGGER.log(Level.SEVERE, String.format("Could not apply update %s. It is skipped", change));
+        }
+    }
+
+    private void executeRemoval(QueryGenerator generator, DBConnection.Table<?, ?> table, Membership membership) {
+        throw new UnsupportedOperationException("Removal not implemented yet");
+    }
+
+    private void executeAddition(QueryGenerator generator, DBConnection.Table<?, ?> table, Membership membership) {
+        throw new UnsupportedOperationException("Addition not implemented yet");
+    }
+
     @FXML
     private void saveChanges() {
+        Optional<DBConnection.Table<Set<Membership>, Membership>> table;
+        try {
+            table = dbConnection.getTable(Tables.MEMBERS);
+        } catch (QueryFailedException ex) {
+            throw new IllegalStateException("Could not request table via DB connection", ex);
+        }
+        if (table.isEmpty()) {
+            throw new IllegalStateException("The member table is not preset. Skip any updates to it");
+        }
+
+        QueryGenerator queryGenerator = dbConnection.getDbms().getQueryGenerator();
         for (EntryChange change : recordedChanges) {
-            System.out.println(change);
+            if (change.entryToRemove().isPresent()) {
+                if (change.entryToAdd().isPresent()) {
+                    executeUpdate(queryGenerator, table.get(), change);
+                } else {
+                    executeRemoval(queryGenerator, table.get(), change.entryToRemove().get());
+                }
+            } else {
+                if (change.entryToAdd().isPresent()) {
+                    executeAddition(queryGenerator, table.get(), change.entryToAdd().get());
+                }
+            }
         }
         recordedChanges.clear();
     }
