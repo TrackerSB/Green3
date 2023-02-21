@@ -1,0 +1,8 @@
+--add-modules
+    org.junit.jupiter.params
+--add-exports
+    org.junit.platform.commons/org.junit.platform.commons.logging=ALL-UNNAMED
+--add-exports
+    org.junit.platform.commons/org.junit.platform.commons.util=ALL-UNNAMED
+--add-exports
+    javafx.graphics/com.sun.javafx.application=org.testfx

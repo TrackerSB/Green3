@@ -1,8 +1,7 @@
 plugins {
     id 'com.github.gmazzo.buildconfig' version '2.0.2'
     id 'io.freefair.lombok' version '6.1.0-m3'
-    // NOTE version 0.0.9 yields an execution error
-    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
 
     id 'application'
     id 'java'
@@ -30,6 +29,15 @@ dependencies {
     implementation 'bayern.steinbrecher:SepaXMLGenerator:0.1-rc.26-SNAPSHOT'
     annotationProcessor 'io.soabase.record-builder:record-builder-processor:34'
     implementation 'io.soabase.record-builder:record-builder-core:34'
+
+    // TestFX
+    testImplementation "org.testfx:testfx-core:4.0.16-alpha"
+    testImplementation "org.testfx:testfx-junit5:4.0.16-alpha"
+
+    // JUnit5
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
 }
 
 application {
@@ -57,6 +65,13 @@ compileJava {
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 buildConfig {
