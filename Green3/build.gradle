@@ -1,6 +1,6 @@
 plugins {
-    id 'com.github.gmazzo.buildconfig' version '2.0.2'
-    id 'io.freefair.lombok' version '6.1.0-m3'
+    id 'com.github.gmazzo.buildconfig' version '3.1.0'
+    id 'io.freefair.lombok' version '6.6.2'
     id 'org.openjfx.javafxplugin' version '0.0.10'
 
     id 'application'
@@ -11,7 +11,7 @@ plugins {
 group 'bayern.steinbrecher.Green3'
 version '3u00-rc01-SNAPSHOT'
 
-sourceCompatibility = 18
+sourceCompatibility = 19
 targetCompatibility = "$sourceCompatibility" as Integer
 
 repositories {
@@ -21,23 +21,48 @@ repositories {
     }
 }
 
+// configurations.all {
+//     resolutionStrategy {
+//         failOnVersionConflict()
+//         preferProjectModules()
+//
+//         dependencySubstitution {
+//             substitute module('org.apache.commons.logging:org.apache.commons.logging') using module('spring.jcl:org.apache.commons.logging:1.1.1')
+//         }
+//     }
+// }
+
 dependencies {
-    implementation 'bayern.steinbrecher:CheckedElements:0.13-rc.10-SNAPSHOT'
-    implementation 'bayern.steinbrecher:DBConnector:0.16-rc.71-SNAPSHOT'
-    implementation 'bayern.steinbrecher:JavaUtility:0.18'
-    implementation 'bayern.steinbrecher:ScreenSwitcher:0.2.4'
-    implementation 'bayern.steinbrecher:SepaXMLGenerator:0.1-rc.26-SNAPSHOT'
-    annotationProcessor 'io.soabase.record-builder:record-builder-processor:34'
-    implementation 'io.soabase.record-builder:record-builder-core:34'
+    implementation 'bayern.steinbrecher:CheckedElements:0.13-rc.12-SNAPSHOT'
+    implementation('bayern.steinbrecher:DBConnector:0.16-rc.77-SNAPSHOT') {
+        exclude module: 'jcl-over-slf4j'
+    }
+    implementation 'bayern.steinbrecher:JavaUtility:0.19-rc.2-SNAPSHOT'
+    implementation 'bayern.steinbrecher:ScreenSwitcher:0.2.5-rc.2-SNAPSHOT'
+    implementation 'bayern.steinbrecher:SepaXMLGenerator:0.1-rc.27-SNAPSHOT'
+    annotationProcessor 'io.soabase.record-builder:record-builder-processor:35'
+    implementation 'io.soabase.record-builder:record-builder-core:35'
 
     // TestFX
     testImplementation "org.testfx:testfx-core:4.0.16-alpha"
     testImplementation "org.testfx:testfx-junit5:4.0.16-alpha"
 
     // JUnit5
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+
+    // MariaDB
+    testImplementation('org.craftercms.mariaDB4j:mariaDB4j:2.6.0') {
+        exclude module: 'jakarta.annotation-api'
+    }
+    testRuntimeOnly('org.craftercms.mariaDB4j:mariaDB4j:2.6.0') {
+        exclude module: 'jakarta.annotation-api'
+    }
+    testImplementation 'org.craftercms.mariaDB4j:mariaDB4j-db-win64:10.4.6.2'
+
+    // Transitive dependencies
+    implementation 'org.jetbrains:annotations:24.0.0'
 }
 
 application {

@@ -1,10 +1,10 @@
 package bayern.steinbrecher.green3.screens.memberManagement;
 
 import bayern.steinbrecher.dbConnector.AuthException;
-import bayern.steinbrecher.dbConnector.ConnectionFailedException;
 import bayern.steinbrecher.dbConnector.DBConnection;
-import bayern.steinbrecher.dbConnector.SshConnection;
-import bayern.steinbrecher.dbConnector.credentials.SshCredentials;
+import bayern.steinbrecher.dbConnector.DatabaseNotFoundException;
+import bayern.steinbrecher.dbConnector.SimpleConnection;
+import bayern.steinbrecher.dbConnector.credentials.SimpleCredentials;
 import bayern.steinbrecher.dbConnector.query.GenerationFailedException;
 import bayern.steinbrecher.dbConnector.query.QueryFailedException;
 import bayern.steinbrecher.dbConnector.query.SupportedDBMS;
@@ -44,8 +44,6 @@ import lombok.NonNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -91,22 +89,23 @@ public class MemberManagementScreenController extends ScreenController {
     @NonNull
     private DBConnection connectToMemberDB() {
         try {
-            return new SshConnection(
-                    SupportedDBMS.MY_SQL,
-                    "<dbHost>",
-                    3306,
-                    "<dbName>",
-                    "<sshHost>",
-                    22,
-                    StandardCharsets.UTF_8,
-                    new SshCredentials(
-                            "<dbUsername>",
-                            "<dbPassword>",
-                            "<sshUsername>",
-                            "<sshPassword>"
-                    )
-            );
-        } catch (ConnectionFailedException | AuthException | UnknownHostException ex) {
+            // return new SshConnection(
+            //         SupportedDBMS.MY_SQL,
+            //         "rdbms.strato.de",
+            //         3306,
+            //         "DB4401428",
+            //         "ssh.strato.de",
+            //         22,
+            //         StandardCharsets.UTF_8,
+            //         new SshCredentials(
+            //                 "U4401428",
+            //                 "2cqhbunuMp6peXq",
+            //                 "511067919.swh.strato-hosting.eu",
+            //                 "wXjziib5FNcJ6aG"
+            //         )
+            // );
+            return new SimpleConnection(SupportedDBMS.MARIADB, "localhost", 3306, "TestDB", new SimpleCredentials("user", "password"), false);
+        } catch (AuthException | DatabaseNotFoundException ex) {
             throw new CompletionException("Could not request member data", ex);
         }
     }
